@@ -10,7 +10,29 @@
 <title>AbuBot — Compañía · Salud · Comunidad · IA</title>
 <link rel="manifest" href="#" id="manifest-link">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+/* ===== LOGIN SCREEN ===== */
+#loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:var(--cream);}
+.login-logo{font-size:56px;margin-bottom:8px;}
+.login-title{font-family:'Lora',serif;font-size:28px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center;}
+.login-sub{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:32px;text-align:center;}
+.login-card{background:var(--card);border:2px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px;}
+.login-tabs{display:flex;background:var(--warm);border-radius:100px;padding:4px;gap:4px;}
+.login-tab{flex:1;padding:8px;border-radius:100px;border:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:transparent;cursor:pointer;transition:all .2s;}
+.login-tab.active{background:var(--text);color:var(--cream);}
+.login-input{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
+.login-input:focus{border-color:var(--accent);}
+.login-select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text);background:var(--cream);outline:none;cursor:pointer;}
+.login-btn{width:100%;padding:16px;background:var(--accent);color:white;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:opacity .2s;}
+.login-btn:hover{opacity:.9;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{font-size:13px;font-weight:700;color:var(--danger);text-align:center;display:none;}
+.login-field{display:flex;flex-direction:column;gap:6px;}
+.login-label{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+#registerFields{display:none;}
+
+/* ===== ESTILOS GENERALES ===== */
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --cream:#fdf6ee;--warm:#f5ebe0;--card:#fffaf5;--border:#e8d5c0;
@@ -365,6 +387,50 @@ body{background:var(--cream);font-family:'Nunito',sans-serif;color:var(--text);m
 </head>
 <body>
 
+<!-- ===== PANTALLA DE LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-logo">🤖</div>
+  <div class="login-title">Abu<span style="color:var(--accent)">Bot</span></div>
+  <div class="login-sub">Compañía · Salud · Comunidad · IA</div>
+
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('login')">Ingresar</button>
+      <button class="login-tab" onclick="switchLoginTab('register')">Registrarse</button>
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">Correo electrónico</label>
+      <input class="login-input" type="email" id="loginEmail" placeholder="correo@ejemplo.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <div id="registerFields">
+      <div class="login-field" style="margin-bottom:12px;">
+        <label class="login-label">Nombre completo</label>
+        <input class="login-input" type="text" id="registerNombre" placeholder="Ej: Carmen Rodríguez">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Soy...</label>
+        <select class="login-select" id="registerRol">
+          <option value="adulto_mayor">👴 Adulto mayor</option>
+          <option value="familiar">👨‍👩‍👧 Familiar / cuidador</option>
+          <option value="medico">🩺 Médico / profesional</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" id="loginBtn" onclick="handleAuth()">Ingresar</button>
+  </div>
+</div>
+
+<!-- ===== APP PRINCIPAL (oculta hasta login) ===== -->
+<div id="appMain" style="display:none;">
+
 <!-- API KEY MODAL -->
 <div class="modal-overlay" id="apiModal">
   <div class="modal">
@@ -378,7 +444,7 @@ body{background:var(--cream);font-family:'Nunito',sans-serif;color:var(--text);m
   </div>
 </div>
 
-<div class="app-shell">
+
 
   <!-- INSTALL BANNER -->
   <div class="install-banner" id="installBanner">
@@ -1268,6 +1334,8 @@ body{background:var(--cream);font-family:'Nunito',sans-serif;color:var(--text);m
 
 <div class="toast" id="toast"></div>
 
+</div><!-- fin appMain -->
+
 <script>
 // ===== ESTADO GLOBAL =====
 let apiKey = localStorage.getItem('abubot_api_key') || '';
@@ -1761,7 +1829,120 @@ function getRespuestas(id, msg){
 }
 
 // ===== INIT =====
-checkApiKey();
+// checkApiKey() se llama después del login, no aquí
+</script>
+
+<script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://cuwuicggkpkzlfiaaxtk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_UtgAEJ65X_C1TGb8eLxpSQ_7ojMiWaJ';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== LOGIN UI =====
+let loginMode = 'login';
+
+function switchLoginTab(mode) {
+  loginMode = mode;
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('registerFields').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('registerFields').style.flexDirection = 'column';
+  document.getElementById('registerFields').style.gap = '12px';
+  document.getElementById('loginBtn').textContent = mode === 'register' ? 'Crear cuenta' : 'Ingresar';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+
+  if (!email || !password) {
+    showLoginError('Por favor complete todos los campos');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Un momento...';
+  errEl.style.display = 'none';
+
+  try {
+    if (loginMode === 'register') {
+      const nombre = document.getElementById('registerNombre').value.trim();
+      const rol = document.getElementById('registerRol').value;
+      if (!nombre) { showLoginError('Por favor ingrese su nombre'); btn.disabled = false; btn.textContent = 'Crear cuenta'; return; }
+
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+
+      // Crear perfil con rol
+      const { error: perfilError } = await sb.from('perfiles').insert({ id: data.user.id, nombre, rol });
+      if (perfilError) throw perfilError;
+
+      showLoginError('✅ Cuenta creada. Revise su correo para confirmar.');
+      errEl.style.color = 'var(--accent2)';
+      errEl.style.display = 'block';
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await entrarApp(data.user);
+    }
+  } catch (err) {
+    const msgs = {
+      'Invalid login credentials': 'Correo o contraseña incorrectos',
+      'Email not confirmed': 'Confirme su correo antes de ingresar',
+      'User already registered': 'Este correo ya está registrado'
+    };
+    showLoginError(msgs[err.message] || err.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = loginMode === 'register' ? 'Crear cuenta' : 'Ingresar';
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.color = 'var(--danger)';
+  el.style.display = 'block';
+}
+
+async function entrarApp(user) {
+  // Obtener perfil y rol
+  const { data: perfil } = await sb.from('perfiles').select('*').eq('id', user.id).single();
+
+  // Ocultar login, mostrar app
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appMain').style.display = 'block';
+
+  // Activar la vista según el rol
+  if (perfil) {
+    const rolVista = { adulto_mayor: 'elder', familiar: 'family', medico: 'doctor' };
+    setMode(rolVista[perfil.rol] || 'elder');
+
+    // Guardar nombre en el saludo
+    if (perfil.rol === 'adulto_mayor') {
+      const saludoEl = document.querySelector('.elder-greeting em');
+      if (saludoEl) saludoEl.textContent = perfil.nombre.split(' ')[0];
+    }
+  }
+
+  checkApiKey();
+}
+
+// Verificar si ya hay sesión activa al cargar
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    entrarApp(session.user);
+  }
+});
+
+// Permitir Enter en los campos de login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleAuth();
+});
 </script>
 </body>
 </html>
