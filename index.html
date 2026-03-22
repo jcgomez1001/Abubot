@@ -1922,10 +1922,22 @@ async function entrarApp(user) {
     const rolVista = { adulto_mayor: 'elder', familiar: 'family', medico: 'doctor' };
     setMode(rolVista[perfil.rol] || 'elder');
 
-    // Guardar nombre en el saludo
+    // Ocultar el toggle — cada usuario solo ve su propia vista
+    document.querySelector('.mode-toggle').style.display = 'none';
+
+    // Personalizar nombre según rol
+    const nombre = perfil.nombre.split(' ')[0];
     if (perfil.rol === 'adulto_mayor') {
       const saludoEl = document.querySelector('.elder-greeting em');
-      if (saludoEl) saludoEl.textContent = perfil.nombre.split(' ')[0];
+      if (saludoEl) saludoEl.textContent = nombre;
+    }
+    if (perfil.rol === 'familiar') {
+      const titulo = document.querySelector('.family-title');
+      if (titulo) titulo.textContent = 'Hola, ' + nombre;
+    }
+    if (perfil.rol === 'medico') {
+      const titulo = document.querySelector('.doctor-name');
+      if (titulo) titulo.textContent = 'Dr. ' + nombre;
     }
   }
 
