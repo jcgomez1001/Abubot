@@ -421,6 +421,13 @@ body{background:var(--cream);font-family:'Nunito',sans-serif;color:var(--text);m
           <option value="medico">🩺 Médico / profesional</option>
         </select>
       </div>
+      <div class="login-field">
+        <label class="login-label">Género</label>
+        <select class="login-select" id="registerGenero">
+          <option value="m">👨 Masculino</option>
+          <option value="f">👩 Femenino</option>
+        </select>
+      </div>
     </div>
 
     <div class="login-error" id="loginError"></div>
@@ -1878,7 +1885,8 @@ async function handleAuth() {
       if (error) throw error;
 
       // Crear perfil con rol
-      const { error: perfilError } = await sb.from('perfiles').insert({ id: data.user.id, nombre, rol });
+      const genero = document.getElementById('registerGenero').value;
+      const { error: perfilError } = await sb.from('perfiles').insert({ id: data.user.id, nombre, rol, genero });
       if (perfilError) throw perfilError;
 
       showLoginError('✅ Cuenta creada. Revise su correo para confirmar.');
@@ -1925,11 +1933,23 @@ async function entrarApp(user) {
     // Ocultar el toggle — cada usuario solo ve su propia vista
     document.querySelector('.mode-toggle').style.display = 'none';
 
-    // Personalizar nombre según rol
+    // Personalizar nombre y saludo según rol y hora
     const nombre = perfil.nombre.split(' ')[0];
     if (perfil.rol === 'adulto_mayor') {
-      const saludoEl = document.querySelector('.elder-greeting em');
-      if (saludoEl) saludoEl.textContent = nombre;
+      // Saludo según hora del día
+      const hora = new Date().getHours();
+      let saludo, tratamiento, emoji;
+      if (hora >= 5 && hora < 12) { saludo = 'Buenos días'; emoji = '🌅'; }
+      else if (hora >= 12 && hora < 19) { saludo = 'Buenas tardes'; emoji = '☀️'; }
+      else { saludo = 'Buenas noches'; emoji = '🌙'; }
+
+      // Tratamiento: "don" para hombre si el nombre suena masculino, si no "doña"
+      // Usamos la lógica simple: si el perfil tiene campo genero, sino por defecto "don/doña"
+      // Por ahora usamos "don" para todos — se puede mejorar después
+      tratamiento = perfil.genero === 'f' ? 'doña' : 'don';
+
+      const saludoEl = document.querySelector('.elder-greeting');
+      if (saludoEl) saludoEl.innerHTML = saludo + ',<br><em>' + tratamiento + ' ' + nombre + '</em> ' + emoji;
     }
     if (perfil.rol === 'familiar') {
       const titulo = document.querySelector('.family-title');
