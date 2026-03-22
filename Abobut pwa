@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AbuBot">
+<meta name="theme-color" content="#fdf6ee">
+<title>AbuBot — Compañía · Salud · Comunidad · IA</title>
+<link rel="manifest" href="#" id="manifest-link">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ===== LOGIN SCREEN ===== */
+#loginScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:var(--cream);}
+.login-logo{font-size:56px;margin-bottom:8px;}
+.login-title{font-family:'Lora',serif;font-size:28px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center;}
+.login-sub{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:32px;text-align:center;}
+.login-card{background:var(--card);border:2px solid var(--border);border-radius:24px;padding:28px 24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:16px;}
+.login-tabs{display:flex;background:var(--warm);border-radius:100px;padding:4px;gap:4px;}
+.login-tab{flex:1;padding:8px;border-radius:100px;border:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--muted);background:transparent;cursor:pointer;transition:all .2s;}
+.login-tab.active{background:var(--text);color:var(--cream);}
+.login-input{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
+.login-input:focus{border-color:var(--accent);}
+.login-select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text);background:var(--cream);outline:none;cursor:pointer;}
+.login-btn{width:100%;padding:16px;background:var(--accent);color:white;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:opacity .2s;}
+.login-btn:hover{opacity:.9;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{font-size:13px;font-weight:700;color:var(--danger);text-align:center;display:none;}
+.login-field{display:flex;flex-direction:column;gap:6px;}
+.login-label{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+#registerFields{display:none;}
+
+/* ===== ESTILOS GENERALES ===== */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --cream:#fdf6ee;--warm:#f5ebe0;--card:#fffaf5;--border:#e8d5c0;
+  --text:#2d1f0e;--muted:#8b6f57;--accent:#e07a3f;--accent2:#4a9e6b;
+  --accent3:#5b8fd4;--danger:#d94f4f;--purple:#7c6bc9;--gold:#c9901a;
+  --shadow:rgba(100,60,20,0.10);--rose:#e05080;--teal:#2a9d8f;
+}
+body{background:var(--cream);font-family:'Nunito',sans-serif;color:var(--text);min-height:100vh;}
+.app-shell{display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px;gap:18px;}
+.mode-toggle{display:flex;background:var(--warm);border:2px solid var(--border);border-radius:100px;padding:4px;gap:4px;width:100%;max-width:420px;}
+.mode-btn{flex:1;padding:10px 12px;border-radius:100px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .25s;}
+.mode-btn.active{background:var(--text);color:var(--cream);}
+.phone-frame{width:100%;max-width:390px;background:var(--card);border-radius:40px;border:3px solid var(--border);box-shadow:0 20px 60px var(--shadow);overflow:hidden;position:relative;}
+.phone-notch{width:120px;height:26px;background:var(--text);border-radius:0 0 20px 20px;margin:0 auto;}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0;font-size:12px;font-weight:700;color:var(--muted);}
+.screen{display:none;flex-direction:column;min-height:700px;padding-bottom:84px;}
+.screen.active{display:flex;}
+.elder-header{padding:18px 22px 14px;background:linear-gradient(160deg,#fdf0e4 0%,#fdf6ee 100%);border-bottom:1px solid var(--border);}
+.elder-greeting{font-family:'Lora',serif;font-size:24px;font-weight:600;color:var(--text);line-height:1.25;}
+.elder-greeting em{font-style:italic;color:var(--accent);}
+.elder-date{font-size:13px;color:var(--muted);margin-top:3px;font-weight:600;}
+.inner-tabs{display:flex;padding:10px 10px 0;gap:4px;border-bottom:2px solid var(--border);background:var(--card);overflow-x:auto;}
+.inner-tabs::-webkit-scrollbar{display:none;}
+.inner-tab{padding:8px 12px;border-radius:12px 12px 0 0;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+.inner-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--warm);}
+.tab-panel{display:none;flex-direction:column;flex:1;}
+.tab-panel.active{display:flex;}
+
+/* VOICE CARD */
+.voice-card{margin:16px 14px 0;background:linear-gradient(135deg,#f9e8d6,#fdf0e6);border:2px solid #e8c8a8;border-radius:22px;padding:18px;cursor:pointer;transition:transform .15s;animation:gentlePulse 4s ease-in-out infinite;}
+.voice-card:active{transform:scale(0.98);}
+@keyframes gentlePulse{0%,100%{box-shadow:0 4px 20px rgba(224,122,63,.15);}50%{box-shadow:0 8px 32px rgba(224,122,63,.28);}}
+.voice-top{display:flex;align-items:center;gap:14px;}
+.voice-orb{width:56px;height:56px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;flex-shrink:0;}
+.voice-orb::after{content:'';position:absolute;width:72px;height:72px;border-radius:50%;border:3px solid rgba(224,122,63,.3);animation:ripple 2s ease-out infinite;}
+@keyframes ripple{0%{transform:scale(.8);opacity:1;}100%{transform:scale(1.4);opacity:0;}}
+.voice-label{font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;}
+.voice-title{font-family:'Lora',serif;font-size:19px;font-weight:600;color:var(--text);}
+.waveform{display:flex;align-items:center;gap:3px;margin-top:14px;height:28px;}
+.wbar{flex:1;background:var(--accent);border-radius:4px;opacity:.6;animation:wave 1.4s ease-in-out infinite;}
+.wbar:nth-child(1){height:40%;animation-delay:0s}.wbar:nth-child(2){height:75%;animation-delay:.1s}.wbar:nth-child(3){height:55%;animation-delay:.2s}.wbar:nth-child(4){height:90%;animation-delay:.3s}.wbar:nth-child(5){height:60%;animation-delay:.4s}.wbar:nth-child(6){height:80%;animation-delay:.5s}.wbar:nth-child(7){height:45%;animation-delay:.6s}.wbar:nth-child(8){height:70%;animation-delay:.7s}.wbar:nth-child(9){height:35%;animation-delay:.8s}.wbar:nth-child(10){height:65%;animation-delay:.9s}
+@keyframes wave{0%,100%{transform:scaleY(.6);}50%{transform:scaleY(1);}}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 14px 0;}
+.action-btn{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .2s;text-align:center;}
+.action-btn:active{transform:scale(.97);}
+.action-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.action-label{font-size:14px;font-weight:800;color:var(--text);line-height:1.2;}
+.action-sub{font-size:11px;color:var(--muted);font-weight:600;}
+.emergency-btn{margin:14px 14px 0;background:var(--danger);border:none;border-radius:22px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;width:calc(100% - 28px);transition:transform .1s;box-shadow:0 6px 24px rgba(217,79,79,.3);}
+.emergency-btn:active{transform:scale(.98);}
+.e-icon{width:52px;height:52px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:3px solid rgba(255,255,255,.4);}
+.e-label{font-size:20px;font-weight:900;color:white;}
+.e-sub{font-size:12px;opacity:.85;color:white;font-weight:600;margin-top:2px;}
+.section-wrap{margin:14px 14px 0;}
+.sec-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-left:2px;}
+.med-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;}
+.med-card:active{transform:scale(.98);}
+.med-dot{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.med-dot.pending{background:#fff3e0;}.med-dot.taken{background:#e8f4ee;}.med-dot.missed{background:#fce8e8;}
+.med-info{flex:1;}
+.med-name{font-size:16px;font-weight:800;color:var(--text);}
+.med-time{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
+.med-action{font-size:12px;font-weight:800;padding:7px 12px;border-radius:100px;border:2px solid;cursor:pointer;white-space:nowrap;}
+.med-action.pending{color:var(--accent);border-color:var(--accent);background:#fff3e0;}
+.med-action.taken{color:var(--accent2);border-color:var(--accent2);background:#e8f4ee;}
+
+/* ===== IA CHAT ===== */
+.ai-chat-container{margin:14px 14px 0;display:flex;flex-direction:column;gap:10px;}
+.ai-memory-badge{background:linear-gradient(135deg,#f0eefa,#e8e4f8);border:2px solid #c8bef0;border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.ai-memory-icon{width:36px;height:36px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ai-memory-text{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
+.ai-memory-sub{font-size:11px;color:var(--purple);font-weight:700;margin-top:2px;}
+.chat-bubble-ai{background:linear-gradient(135deg,#f0eefa,#e8e4f8);border:1.5px solid #c8bef0;border-radius:18px 18px 18px 4px;padding:14px 16px;margin-right:32px;}
+.chat-bubble-ai .bubble-label{font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.chat-bubble-ai .bubble-text{font-size:15px;font-weight:700;color:var(--text);line-height:1.5;}
+.chat-bubble-user{background:var(--accent);border-radius:18px 18px 4px 18px;padding:12px 16px;margin-left:32px;}
+.chat-bubble-user .bubble-text{font-size:14px;font-weight:700;color:white;line-height:1.4;}
+.chat-input-area{background:var(--card);border:2px solid var(--border);border-radius:20px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-textarea{flex:1;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:var(--text);border:none;background:transparent;resize:none;outline:none;min-height:40px;max-height:120px;line-height:1.5;}
+.chat-textarea::placeholder{color:var(--muted);}
+.chat-send-btn{width:42px;height:42px;background:var(--accent);border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;transition:all .2s;}
+.chat-send-btn:disabled{background:#d4c4b4;cursor:not-allowed;}
+.chat-send-btn:not(:disabled):active{transform:scale(.95);}
+.chat-voice-btn{width:42px;height:42px;background:var(--warm);border:2px solid var(--border);border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;}
+.memory-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.memory-chip{background:white;border:1.5px solid #c8bef0;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--purple);}
+.chat-messages{display:flex;flex-direction:column;gap:10px;}
+.typing-bubble{background:linear-gradient(135deg,#f0eefa,#e8e4f8);border:1.5px solid #c8bef0;border-radius:18px 18px 18px 4px;padding:14px 16px;margin-right:32px;display:none;}
+.typing-dots{display:flex;gap:4px;align-items:center;height:20px;}
+.typing-dot{width:8px;height:8px;background:var(--purple);border-radius:50%;animation:typingBounce 1.2s ease-in-out infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}
+.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-8px);}}
+
+/* ===== WEARABLES ===== */
+.wearable-hero{margin:14px 14px 0;background:linear-gradient(135deg,#0f2535,#1a3a52);border-radius:22px;padding:18px;position:relative;overflow:hidden;}
+.wearable-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(91,143,212,.15);border-radius:50%;}
+.wearable-connected{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.wearable-dot{width:8px;height:8px;background:#4a9e6b;border-radius:50%;animation:blink 2s ease-in-out infinite;}
+.wearable-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);}
+.vitals-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.vital-card{background:rgba(255,255,255,.08);border-radius:14px;padding:12px;}
+.vital-icon{font-size:20px;margin-bottom:6px;}
+.vital-val{font-size:22px;font-weight:900;color:white;line-height:1;}
+.vital-unit{font-size:11px;color:rgba(255,255,255,.5);font-weight:700;}
+.vital-label{font-size:10px;font-weight:800;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;}
+.vital-status{font-size:10px;font-weight:800;margin-top:3px;}
+.vital-ok{color:#4a9e6b;}.vital-warn{color:#e07a3f;}.vital-alert{color:#d94f4f;}
+.steps-bar-wrap{margin-top:12px;background:rgba(255,255,255,.1);border-radius:100px;height:8px;}
+.steps-bar{width:73%;background:var(--accent2);border-radius:100px;height:8px;}
+.steps-meta{display:flex;justify-content:space-between;margin-top:6px;}
+.steps-count{font-size:13px;font-weight:800;color:white;}
+.steps-goal{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;}
+
+/* ===== ANOMALIAS ===== */
+.anomaly-card{margin:14px 14px 0;background:#fff8f0;border:2px solid #e8c090;border-radius:20px;padding:16px;}
+.anomaly-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.anomaly-icon{width:40px;height:40px;background:#fff3e0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.anomaly-title{font-size:14px;font-weight:800;color:#8b4010;}
+.anomaly-sub{font-size:11px;color:#b06030;font-weight:600;margin-top:2px;}
+.anomaly-insight{font-size:13px;color:var(--text);line-height:1.5;font-weight:600;margin-bottom:12px;}
+.anomaly-insight strong{color:var(--accent);}
+.anomaly-actions{display:flex;gap:8px;}
+.anom-btn{flex:1;padding:9px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;}
+.anom-btn.primary{background:var(--accent);color:white;}
+.anom-btn.secondary{background:var(--warm);color:var(--text);border:1.5px solid var(--border);}
+
+/* ===== GRUPOS TEMÁTICOS ===== */
+.groups-list{display:flex;flex-direction:column;gap:10px;margin:14px 14px 0;}
+.group-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:14px 16px;cursor:pointer;transition:all .2s;}
+.group-card:active{transform:scale(.98);}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.group-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.group-name{font-size:15px;font-weight:800;color:var(--text);}
+.group-desc{font-size:12px;color:var(--muted);font-weight:600;margin-top:1px;}
+.group-footer{display:flex;align-items:center;gap:8px;}
+.group-members{font-size:11px;font-weight:700;color:var(--muted);}
+.group-activity{margin-left:auto;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;}
+.group-joined{font-size:11px;font-weight:800;padding:5px 12px;border-radius:100px;border:2px solid var(--accent2);color:var(--accent2);background:#e8f4ee;}
+.group-join{font-size:11px;font-weight:800;padding:5px 12px;border-radius:100px;background:var(--accent);color:white;border:none;cursor:pointer;}
+
+/* ===== MARKETPLACE ===== */
+.marketplace-hero{margin:14px 14px 0;background:linear-gradient(135deg,#1a2a1a,#2d4a2d);border-radius:22px;padding:18px;}
+.mkt-title{font-size:10px;font-weight:800;color:rgba(74,158,107,.9);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.mkt-heading{font-family:'Lora',serif;font-size:18px;font-weight:600;color:white;margin-bottom:4px;}
+.mkt-sub{font-size:12px;color:rgba(255,255,255,.55);font-weight:600;}
+.services-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 14px 0;}
+.service-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:14px 12px;cursor:pointer;transition:all .2s;text-align:center;}
+.service-card:active{transform:scale(.97);}
+.service-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;}
+.service-name{font-size:13px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:3px;}
+.service-price{font-size:12px;font-weight:700;color:var(--accent);}
+.service-rating{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;}
+.service-btn{margin-top:8px;background:var(--accent);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;width:100%;}
+.nearby-badge{display:inline-flex;align-items:center;gap:4px;background:#e8f4ee;border-radius:100px;padding:3px 10px;font-size:10px;font-weight:800;color:#2d7a4f;margin-bottom:6px;}
+
+/* ===== SOCIAL FEED ===== */
+.challenge-hero{margin:14px 14px 0;background:linear-gradient(135deg,#1a3a2a,#2d5a3d);border-radius:22px;padding:20px;position:relative;overflow:hidden;}
+.challenge-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(74,158,107,.2);border-radius:50%;}
+.ch-label{font-size:10px;font-weight:800;color:rgba(74,158,107,.9);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.ch-title{font-family:'Lora',serif;font-size:20px;font-weight:600;color:white;line-height:1.3;margin-bottom:8px;}
+.ch-sub{font-size:12px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:14px;}
+.ch-progress-wrap{background:rgba(255,255,255,.12);border-radius:100px;height:10px;margin-bottom:8px;}
+.ch-progress{width:68%;background:var(--accent2);border-radius:100px;height:10px;position:relative;}
+.ch-progress::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:14px;height:14px;background:white;border-radius:50%;border:2px solid var(--accent2);}
+.ch-meta{display:flex;justify-content:space-between;align-items:center;}
+.ch-count{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;}
+.ch-avatars{display:flex;}
+.ch-av{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.4);margin-left:-8px;font-size:14px;display:flex;align-items:center;justify-content:center;background:#2d5a3d;}
+.ch-btn{background:var(--accent2);color:white;border:none;border-radius:100px;padding:8px 16px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;}
+.members-row{display:flex;gap:10px;overflow-x:auto;padding:0 14px;margin-top:14px;padding-bottom:4px;}
+.members-row::-webkit-scrollbar{display:none;}
+.member-chip{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;}
+.member-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;border:3px solid var(--border);}
+.member-av.online::after{content:'';position:absolute;bottom:2px;right:2px;width:11px;height:11px;background:var(--accent2);border-radius:50%;border:2px solid var(--card);}
+.member-name{font-size:11px;font-weight:700;color:var(--text);text-align:center;max-width:56px;line-height:1.2;}
+.member-mood{font-size:10px;color:var(--muted);font-weight:600;}
+.social-feed{display:flex;flex-direction:column;gap:10px;margin:14px 14px 0;}
+.feed-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:14px 16px;}
+.feed-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.feed-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--warm);border:2px solid var(--border);flex-shrink:0;}
+.feed-author{font-size:14px;font-weight:800;color:var(--text);}
+.feed-time{font-size:11px;color:var(--muted);font-weight:600;}
+.feed-badge{margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px;border-radius:100px;}
+.badge-challenge{background:#e8f4ee;color:#2d7a4f;}
+.badge-tip{background:#fff0e6;color:#8b4010;}
+.badge-moment{background:#f0eefa;color:#3a2a8a;}
+.feed-body{font-size:14px;color:var(--text);line-height:1.55;margin-bottom:12px;}
+.feed-body strong{color:var(--accent2);font-weight:700;}
+.feed-actions{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);}
+.feed-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px;border-radius:10px;border:none;background:transparent;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--muted);transition:background .2s;}
+.feed-action-btn:hover{background:var(--warm);}
+.feed-action-btn.liked{color:var(--rose);}
+.feed-action-btn.reacted{color:var(--accent2);}
+
+/* ===== FAMILY SCREEN ===== */
+.family-header{padding:18px 22px 14px;background:linear-gradient(160deg,#1a2a3a 0%,#243347 100%);}
+.family-title{font-size:12px;font-weight:800;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+.family-name{font-family:'Lora',serif;font-size:22px;font-weight:600;color:white;}
+.family-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+.fstat{background:rgba(255,255,255,.08);border-radius:12px;padding:10px;text-align:center;}
+.fstat-val{font-size:20px;font-weight:900;color:white;line-height:1;}
+.fstat-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+.family-tabs{display:flex;padding:8px 10px 0;gap:4px;border-bottom:2px solid rgba(255,255,255,.1);background:#1e2d3d;overflow-x:auto;}
+.family-tabs::-webkit-scrollbar{display:none;}
+.family-tab{padding:8px 12px;border-radius:10px 10px 0 0;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.4);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.family-tab.active{color:var(--accent3);background:rgba(91,143,212,.15);}
+.family-body{padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--cream);}
+.dash-sec-title{font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.dash-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:14px 16px;}
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.act-item:last-child{border-bottom:none;padding-bottom:0;}
+.act-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ai-g{background:#e8f4ee;}.ai-b{background:#e8eef8;}.ai-o{background:#fff0e6;}.ai-r{background:#fce8e8;}.ai-p{background:#f0eefa;}
+.act-title{font-size:13px;font-weight:700;color:var(--text);}
+.act-time{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;}
+.act-bdg{font-size:10px;font-weight:800;padding:3px 9px;border-radius:100px;white-space:nowrap;align-self:flex-start;margin-top:1px;}
+.bdg-ok{background:#e8f4ee;color:#2d7a4f;}.bdg-warn{background:#fff0e6;color:#b85a1a;}.bdg-info{background:#e8eef8;color:#1a4a8a;}.bdg-social{background:#f0eefa;color:#3a2a8a;}.bdg-alert{background:#fce8e8;color:#8a1a1a;}
+
+/* ===== REPORTE MÉDICO ===== */
+.medical-report{background:white;border:2px solid var(--border);border-radius:18px;padding:16px;margin-bottom:0;}
+.report-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.report-logo{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.report-title{font-size:14px;font-weight:800;color:var(--text);}
+.report-period{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;}
+.report-section{margin-bottom:12px;}
+.report-section-title{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.report-metric-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.report-metric-row:last-child{border-bottom:none;}
+.report-metric-name{font-size:13px;font-weight:700;color:var(--text);}
+.report-metric-val{font-size:13px;font-weight:800;}
+.val-ok{color:var(--accent2);}.val-warn{color:var(--accent);}.val-alert{color:var(--danger);}
+.report-ai-insight{background:#f0eefa;border-radius:12px;padding:10px 12px;margin-top:10px;}
+.report-ai-label{font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.report-ai-text{font-size:12px;color:var(--text);font-weight:600;line-height:1.5;}
+.report-download-btn{width:100%;background:var(--accent3);color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;margin-top:10px;}
+
+/* ===== WEARABLES FAMILIAR ===== */
+.wearable-family{background:linear-gradient(135deg,#0f2535,#1a3a52);border-radius:16px;padding:14px;}
+.wf-title{font-size:10px;font-weight:800;color:rgba(91,143,212,.9);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.vitals-row{display:flex;gap:8px;}
+.vf-stat{flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center;}
+.vf-val{font-size:20px;font-weight:900;color:white;}
+.vf-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;margin-top:2px;}
+.vf-trend{font-size:10px;font-weight:800;margin-top:3px;}
+.trend-ok{color:#4a9e6b;}.trend-warn{color:#e07a3f;}
+
+/* ===== ANOMALIAS FAMILIAR ===== */
+.anomaly-family-card{background:#fff8f0;border:2px solid #e8c090;border-radius:16px;padding:14px 16px;}
+.anom-timeline{display:flex;flex-direction:column;gap:6px;}
+.anom-event{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0d8b8;}
+.anom-event:last-child{border-bottom:none;padding-bottom:0;}
+.anom-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.dot-warn{background:var(--accent);}.dot-alert{background:var(--danger);}.dot-ok{background:var(--accent2);}
+.anom-event-text{font-size:12px;font-weight:700;color:var(--text);line-height:1.4;}
+.anom-event-time{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px;}
+
+/* ===== MOOD BAR ===== */
+.med-track-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.med-track-row:last-child{border-bottom:none;}
+.med-track-name{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.med-dots{display:flex;gap:3px;}
+.md{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);}
+.md.t{background:var(--accent2);border-color:var(--accent2);}
+.md.m{background:var(--danger);border-color:var(--danger);}
+.mood-row{display:flex;gap:6px;margin-top:10px;}
+.mood-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mood-bwrap{height:56px;display:flex;align-items:flex-end;width:100%;}
+.mood-b{width:100%;border-radius:5px 5px 0 0;}
+.m5 .mood-b{height:90%;background:#4a9e6b;}.m4 .mood-b{height:70%;background:#7ab85a;}
+.m3 .mood-b{height:48%;background:#c9901a;}.m2 .mood-b{height:26%;background:#d94f4f;}
+.mood-em{font-size:14px;}.mood-dl{font-size:9px;font-weight:800;color:var(--muted);}
+.social-summary{background:linear-gradient(135deg,#1a3a2a,#2d5a3d);border-radius:16px;padding:14px;margin-bottom:0;}
+.ss-title{font-size:10px;font-weight:800;color:rgba(74,158,107,.9);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.ss-row{display:flex;gap:8px;}
+.ss-stat{flex:1;background:rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center;}
+.ss-val{font-size:18px;font-weight:900;color:white;}
+.ss-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.alert-card{background:#fff5f0;border:2px solid #e8c0a0;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.alert-action{background:var(--accent);color:white;border:none;border-radius:100px;padding:8px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+
+/* ===== COMMUNITY CHAT MODAL ===== */
+.chat-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.chat-modal-overlay.open{display:flex;}
+.chat-modal{background:var(--card);border-radius:28px 28px 0 0;width:100%;max-width:420px;height:72vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -10px 40px rgba(0,0,0,.2);}
+.chat-modal-header{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1.5px solid var(--border);flex-shrink:0;}
+.chat-modal-drag{width:36px;height:4px;background:var(--border);border-radius:4px;position:absolute;top:10px;left:50%;transform:translateX(-50%);}
+.chat-modal-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:2.5px solid var(--border);}
+.chat-modal-info{flex:1;}
+.chat-modal-name{font-size:16px;font-weight:800;color:var(--text);}
+.chat-modal-status{font-size:11px;font-weight:700;margin-top:1px;}
+.chat-modal-close{width:34px;height:34px;border-radius:50%;border:none;background:var(--warm);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-modal-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.chat-modal-messages::-webkit-scrollbar{display:none;}
+.cm-bubble-them{background:var(--warm);border:1.5px solid var(--border);border-radius:18px 18px 18px 4px;padding:10px 14px;margin-right:40px;max-width:85%;}
+.cm-bubble-them .cm-text{font-size:14px;font-weight:600;color:var(--text);line-height:1.45;}
+.cm-bubble-them .cm-time{font-size:10px;color:var(--muted);font-weight:600;margin-top:4px;}
+.cm-bubble-me{background:var(--accent);border-radius:18px 18px 4px 18px;padding:10px 14px;margin-left:40px;align-self:flex-end;max-width:85%;}
+.cm-bubble-me .cm-text{font-size:14px;font-weight:600;color:white;line-height:1.45;}
+.cm-bubble-me .cm-time{font-size:10px;color:rgba(255,255,255,.7);font-weight:600;margin-top:4px;text-align:right;}
+.cm-typing{background:var(--warm);border:1.5px solid var(--border);border-radius:18px 18px 18px 4px;padding:10px 14px;margin-right:40px;display:none;}
+.cm-typing-dots{display:flex;gap:4px;align-items:center;height:18px;}
+.cm-typing-dot{width:7px;height:7px;background:var(--muted);border-radius:50%;animation:typingBounce 1.2s ease-in-out infinite;}
+.cm-typing-dot:nth-child(2){animation-delay:.2s;}
+.cm-typing-dot:nth-child(3){animation-delay:.4s;}
+.chat-modal-input-row{display:flex;gap:8px;align-items:center;padding:10px 14px 18px;border-top:1.5px solid var(--border);flex-shrink:0;}
+.cm-input{flex:1;border:2px solid var(--border);border-radius:22px;padding:10px 16px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--warm);outline:none;transition:border-color .2s;}
+.cm-input:focus{border-color:var(--accent);}
+.cm-send{width:42px;height:42px;background:var(--accent);border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.cm-send:disabled{background:#d4c4b4;cursor:not-allowed;}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid var(--border);display:flex;padding:8px 6px 14px;gap:2px;border-radius:0 0 38px 38px;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:14px;cursor:pointer;transition:background .2s;}
+.nav-item.active{background:var(--warm);}
+.nav-icon{font-size:20px;}
+.nav-label{font-size:10px;font-weight:800;color:var(--muted);}
+.nav-item.active .nav-label{color:var(--accent);}
+.nav-badge{position:relative;}
+.nav-badge::after{content:'3';position:absolute;top:-4px;right:-6px;background:var(--danger);color:white;font-size:9px;font-weight:900;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--cream);padding:12px 22px;border-radius:100px;font-size:13px;font-weight:700;white-space:nowrap;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);max-width:90vw;text-align:center;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+@keyframes popHeart{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.pop{animation:popHeart .3s ease;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== PWA INSTALL BANNER ===== */
+.install-banner{display:none;background:linear-gradient(135deg,var(--accent),#c5632a);color:white;border-radius:18px;padding:14px 16px;max-width:420px;width:100%;align-items:center;gap:12px;}
+.install-banner.show{display:flex;}
+.install-banner-icon{font-size:28px;flex-shrink:0;}
+.install-banner-text{flex:1;}
+.install-banner-title{font-size:14px;font-weight:800;margin-bottom:2px;}
+.install-banner-sub{font-size:11px;opacity:.85;font-weight:600;}
+.install-btn{background:white;color:var(--accent);border:none;border-radius:100px;padding:8px 16px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;flex-shrink:0;}
+
+/* ===== API KEY MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--card);border-radius:28px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-icon{font-size:48px;text-align:center;margin-bottom:14px;}
+.modal-title{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);text-align:center;margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--muted);font-weight:600;text-align:center;line-height:1.5;margin-bottom:20px;}
+.modal-input{width:100%;border:2px solid var(--border);border-radius:14px;padding:14px 16px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--warm);outline:none;transition:border-color .2s;margin-bottom:12px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-btn{width:100%;background:var(--accent);color:white;border:none;border-radius:14px;padding:14px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;}
+.modal-btn:active{transform:scale(.98);}
+.modal-skip{display:block;text-align:center;margin-top:10px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;}
+.modal-note{font-size:11px;color:var(--muted);font-weight:600;text-align:center;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<!-- ===== PANTALLA DE LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-logo">🤖</div>
+  <div class="login-title">Abu<span style="color:var(--accent)">Bot</span></div>
+  <div class="login-sub">Compañía · Salud · Comunidad · IA</div>
+
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('login')">Ingresar</button>
+      <button class="login-tab" onclick="switchLoginTab('register')">Registrarse</button>
+    </div>
+
+    <div class="login-field">
+      <label class="login-label">Correo electrónico</label>
+      <input class="login-input" type="email" id="loginEmail" placeholder="correo@ejemplo.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <div id="registerFields">
+      <div class="login-field" style="margin-bottom:12px;">
+        <label class="login-label">Nombre completo</label>
+        <input class="login-input" type="text" id="registerNombre" placeholder="Ej: Carmen Rodríguez">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Soy...</label>
+        <select class="login-select" id="registerRol">
+          <option value="adulto_mayor">👴 Adulto mayor</option>
+          <option value="familiar">👨‍👩‍👧 Familiar / cuidador</option>
+          <option value="medico">🩺 Médico / profesional</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" id="loginBtn" onclick="handleAuth()">Ingresar</button>
+  </div>
+</div>
+
+<!-- ===== APP PRINCIPAL (oculta hasta login) ===== -->
+<div id="appMain" style="display:none;">
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <div class="modal-icon">🤖</div>
+    <div class="modal-title">Activar AbuBot IA</div>
+    <div class="modal-sub">Para chatear con IA real necesita su clave de API de Anthropic. Esta se guarda solo en su dispositivo.</div>
+    <input class="modal-input" type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+    <button class="modal-btn" onclick="saveApiKey()">Activar AbuBot IA 🚀</button>
+    <span class="modal-skip" onclick="skipApiKey()">Continuar sin IA real (modo demo)</span>
+    <div class="modal-note">🔒 Su clave nunca sale de su dispositivo.<br>Obténgala en console.anthropic.com</div>
+  </div>
+</div>
+
+
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-icon">📱</div>
+    <div class="install-banner-text">
+      <div class="install-banner-title">Instalar AbuBot en su celular</div>
+      <div class="install-banner-sub">Acceso rápido desde la pantalla de inicio</div>
+    </div>
+    <button class="install-btn" id="installBtn">Instalar</button>
+  </div>
+
+  <div style="text-align:center;padding:4px 0;">
+    <div style="font-family:'Lora',serif;font-size:26px;font-weight:600;color:var(--text);">Abu<span style="color:var(--accent)">Bot</span></div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:1px;">Compañía · Salud · Comunidad · IA</div>
+  </div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('elder')">👴 Vista Abuelito/a</button>
+    <button class="mode-btn" onclick="setMode('family')">👨‍👩‍👧 Vista Familiar</button>
+    <button class="mode-btn" onclick="setMode('doctor')">🩺 Vista Médico</button>
+  </div>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="status-bar"><span id="clockDisplay">9:41</span><span>📶 100%</span></div>
+
+    <!-- ====== ELDER SCREEN ====== -->
+    <div class="screen active" id="screen-elder" style="position:relative;">
+      <div class="elder-header">
+        <div class="elder-greeting">Buenos días,<br><em>doña Carmen</em> 🌸</div>
+        <div class="elder-date" id="elderDate">Martes, 18 de marzo · Cali</div>
+      </div>
+
+      <div class="inner-tabs">
+        <button class="inner-tab active" onclick="switchTab('home')">🏠 Inicio</button>
+        <button class="inner-tab" onclick="switchTab('meds')">💊 Medicinas</button>
+        <button class="inner-tab" onclick="switchTab('abubot-ai')">🤖 AbuBot IA</button>
+        <button class="inner-tab" onclick="switchTab('watch')">⌚ Mi Reloj</button>
+        <button class="inner-tab" onclick="switchTab('social')">👥 Comunidad</button>
+        <button class="inner-tab" onclick="switchTab('grupos')">🌿 Grupos</button>
+        <button class="inner-tab" onclick="switchTab('marketplace')">🛍️ Servicios</button>
+      </div>
+
+      <!-- ===== HOME TAB ===== -->
+      <div class="tab-panel active" id="tab-home">
+        <div class="voice-card" onclick="showToast('🎵 \"Hola mamá, te queremos mucho. ¡Que tengas un lindo martes!\" — Daniela 💛')">
+          <div class="voice-top">
+            <div class="voice-orb">🎙️</div>
+            <div>
+              <div class="voice-label">Mensaje de hoy</div>
+              <div class="voice-title">Toca para escuchar a Daniela</div>
+            </div>
+          </div>
+          <div class="waveform">
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+            <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <div class="action-btn" onclick="switchTab('abubot-ai');switchTabNav('abubot-ai')">
+            <div class="action-icon" style="background:#f0eefa;">🤖</div>
+            <div class="action-label">Hablar con AbuBot</div>
+            <div class="action-sub">Siempre disponible</div>
+          </div>
+          <div class="action-btn" onclick="switchTab('meds');switchTabNav('meds')">
+            <div class="action-icon" style="background:#fff3e0;">💊</div>
+            <div class="action-label">Mis medicinas</div>
+            <div class="action-sub">1 pendiente hoy</div>
+          </div>
+          <div class="action-btn" onclick="switchTab('social');switchTabNav('social')">
+            <div class="action-icon" style="background:#e8f4ee;">👥</div>
+            <div class="action-label">Mi comunidad</div>
+            <div class="action-sub">Doña Rosa te saludó</div>
+          </div>
+          <div class="action-btn" onclick="switchTab('watch');switchTabNav('watch')">
+            <div class="action-icon" style="background:#e8eef8;">⌚</div>
+            <div class="action-label">Mi reloj</div>
+            <div class="action-sub">Todo normal hoy</div>
+          </div>
+        </div>
+
+        <button class="emergency-btn" onclick="showToast('🚨 Llamando a Daniela y al 123... ¡Ya vienen!')">
+          <div class="e-icon">🆘</div>
+          <div>
+            <div class="e-label">Botón de emergencia</div>
+            <div class="e-sub">Alerta a su familia y servicios de emergencia</div>
+          </div>
+        </button>
+
+        <div class="anomaly-card" style="margin-bottom:8px;">
+          <div class="anomaly-header">
+            <div class="anomaly-icon">🤖</div>
+            <div>
+              <div class="anomaly-title">AbuBot la cuida</div>
+              <div class="anomaly-sub">Todo normal esta mañana · 9:41 am</div>
+            </div>
+          </div>
+          <div class="anomaly-insight">Su <strong>frecuencia cardíaca está estable</strong> en 72 bpm. Ya tomó el Losartán de hoy. Le falta la Metformina del almuerzo.</div>
+          <div class="anomaly-actions">
+            <button class="anom-btn primary" onclick="switchTab('abubot-ai');switchTabNav('abubot-ai')">Hablar con AbuBot</button>
+            <button class="anom-btn secondary" onclick="switchTab('meds');switchTabNav('meds')">Ver medicinas</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MEDS TAB ===== -->
+      <div class="tab-panel" id="tab-meds">
+        <div class="section-wrap">
+          <div class="sec-title">Medicinas de hoy</div>
+          <div class="med-card" onclick="takeMed(this)">
+            <div class="med-dot taken">✅</div>
+            <div class="med-info">
+              <div class="med-name">Losartán 50mg</div>
+              <div class="med-time">Con el desayuno · 7:30 am ✓</div>
+            </div>
+            <div class="med-action taken">Tomado</div>
+          </div>
+          <div class="med-card" onclick="takeMed(this)">
+            <div class="med-dot pending">💊</div>
+            <div class="med-info">
+              <div class="med-name">Metformina 500mg</div>
+              <div class="med-time">Con el almuerzo · 12:00 pm</div>
+            </div>
+            <div class="med-action pending">Tomar</div>
+          </div>
+          <div class="med-card" onclick="takeMed(this)">
+            <div class="med-dot taken">✅</div>
+            <div class="med-info">
+              <div class="med-name">Ácido fólico</div>
+              <div class="med-time">Con el desayuno · 7:30 am ✓</div>
+            </div>
+            <div class="med-action taken">Tomado</div>
+          </div>
+          <div class="med-card" onclick="takeMed(this)">
+            <div class="med-dot pending">💊</div>
+            <div class="med-info">
+              <div class="med-name">Atorvastatina 20mg</div>
+              <div class="med-time">Con la cena · 7:00 pm</div>
+            </div>
+            <div class="med-action pending">Tomar</div>
+          </div>
+        </div>
+        <div class="section-wrap">
+          <div class="sec-title">Mi racha esta semana</div>
+          <div style="background:var(--card);border:2px solid var(--border);border-radius:16px;padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div style="font-size:15px;font-weight:800;color:var(--text);">Losartán 50mg</div>
+              <div style="font-size:13px;font-weight:800;color:var(--accent2);">7/7 🔥</div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">L</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">M</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">X</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">J</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">V</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">S</div></div>
+              <div style="flex:1;text-align:center;"><div style="width:100%;height:8px;background:var(--accent2);border-radius:4px;margin-bottom:4px;"></div><div style="font-size:10px;color:var(--muted);font-weight:700;">D</div></div>
+            </div>
+            <div style="margin-top:12px;padding:10px;background:#f0eefa;border-radius:10px;">
+              <div style="font-size:12px;color:var(--purple);font-weight:700;">🤖 AbuBot recuerda: Usted siempre toma el Losartán a las 7:30am con el tinto. ¡Qué disciplina tan bonita, doña Carmen! 🏅</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ABUBOT IA TAB ===== -->
+      <div class="tab-panel" id="tab-abubot-ai">
+        <div class="ai-chat-container">
+          <div class="ai-memory-badge">
+            <div class="ai-memory-icon">🧠</div>
+            <div>
+              <div class="ai-memory-text">AbuBot la recuerda</div>
+              <div class="ai-memory-sub" id="aiStatusBadge">Memoria activa desde hace 8 meses</div>
+            </div>
+          </div>
+          <div class="memory-chips">
+            <div class="memory-chip">💊 Hipertensa · Diabética</div>
+            <div class="memory-chip">🌸 Le gustan las flores</div>
+            <div class="memory-chip">👧 Daniela en Miami</div>
+            <div class="memory-chip">🎂 Cumple el 12 de mayo</div>
+            <div class="memory-chip">☕ Tinto sin azúcar</div>
+          </div>
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble-ai">
+              <div class="bubble-label">🤖 AbuBot</div>
+              <div class="bubble-text">Buenos días, doña Carmen. Hoy es martes y está haciendo fresco en Cali. Recuerdo que le gusta salir al jardín en las mañanas. ¿Cómo amaneció su rodilla derecha hoy? La semana pasada me dijo que le estaba molestando.</div>
+            </div>
+            <div class="chat-bubble-user">
+              <div class="bubble-text">Hoy amaneció mejor, gracias a Dios 🙏</div>
+            </div>
+            <div class="chat-bubble-ai">
+              <div class="bubble-label">🤖 AbuBot</div>
+              <div class="bubble-text">¡Qué alegría escuchar eso! Le cuento que su Losartán ya fue registrado esta mañana a las 7:32am. Le falta la Metformina del almuerzo. ¿Le aviso a las 11:45am para que no se le olvide?</div>
+            </div>
+          </div>
+
+          <div class="typing-bubble" id="typingBubble">
+            <div class="bubble-label">🤖 AbuBot</div>
+            <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <textarea class="chat-textarea" id="chatInput" placeholder="Escriba aquí o toque el micrófono..." rows="1" oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+            <div class="chat-input-row">
+              <button class="chat-voice-btn" onclick="startVoiceInput()" title="Voz">🎙️</button>
+              <div style="flex:1;"></div>
+              <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()" title="Enviar">➤</button>
+            </div>
+          </div>
+
+          <div style="padding:10px;background:#f0eefa;border-radius:14px;border:1.5px solid #c8bef0;">
+            <div style="font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🧠 Lo que AbuBot aprendió esta semana</div>
+            <div style="font-size:12px;color:var(--text);font-weight:600;line-height:1.5;">Prefiere que le recuerden los medicamentos con cariño, no con alarma. Está más activa los martes y jueves. Su ánimo mejora cuando habla con doña Rosa.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== WEARABLE TAB ===== -->
+      <div class="tab-panel" id="tab-watch">
+        <div class="wearable-hero">
+          <div class="wearable-connected">
+            <div class="wearable-dot"></div>
+            <div class="wearable-name">Fitbit Charge 6 · Conectado</div>
+          </div>
+          <div class="vitals-grid">
+            <div class="vital-card">
+              <div class="vital-icon">❤️</div>
+              <div><span class="vital-val">72</span><span class="vital-unit"> bpm</span></div>
+              <div class="vital-label">Frecuencia cardíaca</div>
+              <div class="vital-status vital-ok">✓ Normal</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-icon">🌡️</div>
+              <div><span class="vital-val">36.4</span><span class="vital-unit"> °C</span></div>
+              <div class="vital-label">Temperatura</div>
+              <div class="vital-status vital-ok">✓ Normal</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-icon">🩸</div>
+              <div><span class="vital-val">97</span><span class="vital-unit"> %</span></div>
+              <div class="vital-label">Oxígeno en sangre</div>
+              <div class="vital-status vital-ok">✓ Normal</div>
+            </div>
+            <div class="vital-card">
+              <div class="vital-icon">😴</div>
+              <div><span class="vital-val">6.8</span><span class="vital-unit"> hrs</span></div>
+              <div class="vital-label">Sueño anoche</div>
+              <div class="vital-status vital-warn">⚠ Un poco corto</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <div class="steps-meta">
+              <div class="steps-count">3,285 pasos</div>
+              <div class="steps-goal">Meta: 4,500</div>
+            </div>
+            <div class="steps-bar-wrap"><div class="steps-bar"></div></div>
+          </div>
+        </div>
+        <div class="section-wrap">
+          <div class="sec-title">Tendencia esta semana</div>
+          <div style="background:var(--card);border:2px solid var(--border);border-radius:16px;padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-size:13px;font-weight:800;color:var(--text);">Ritmo cardíaco promedio</div>
+              <div style="font-size:12px;font-weight:800;color:var(--accent2);">↓ Estable 💚</div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:50px;">
+              <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:68%;"></div>
+              <div style="flex:1;background:#5b8fd4;border-radius:4px 4px 0 0;height:80%;"></div>
+              <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:72%;"></div>
+              <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:65%;"></div>
+              <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:78%;"></div>
+              <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:70%;"></div>
+              <div style="flex:1;background:#4a9e6b;border-radius:4px 4px 0 0;height:72%;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">L</span>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">M</span>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">X</span>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">J</span>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">V</span>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;">S</span>
+              <span style="font-size:10px;color:var(--accent2);font-weight:800;">Hoy</span>
+            </div>
+          </div>
+        </div>
+        <div class="section-wrap" style="padding-bottom:8px;">
+          <div style="padding:12px 14px;background:#f0eefa;border:1.5px solid #c8bef0;border-radius:14px;">
+            <div style="font-size:11px;font-weight:800;color:var(--purple);margin-bottom:4px;">🤖 IA detectó</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.5;">Los días que camina más de 3,000 pasos, su frecuencia cardíaca en la noche es 8% más baja. El ejercicio le ayuda mucho, doña Carmen. 💪</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SOCIAL TAB ===== -->
+      <div class="tab-panel" id="tab-social">
+        <div class="challenge-hero">
+          <div class="ch-label">Reto del día</div>
+          <div class="ch-title">Caminata de la mañana 🚶‍♀️</div>
+          <div class="ch-sub">Salir 10 minutos al sol antes del mediodía</div>
+          <div class="ch-progress-wrap"><div class="ch-progress" id="ch-prog"></div></div>
+          <div class="ch-meta">
+            <div class="ch-count" id="ch-count">19 de 28 vecinas lo lograron hoy</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="ch-avatars"><div class="ch-av">👩</div><div class="ch-av">👵</div><div class="ch-av">🧓</div></div>
+              <button class="ch-btn" onclick="completeChallenge()">¡Lo hice!</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin:14px 0 0;padding:0 14px;">
+          <div class="sec-title">Mi comunidad cercana</div>
+        </div>
+        <div class="members-row">
+          <div class="member-chip" onclick="openChat('rosa')">
+            <div class="member-av online" style="background:#fff0e6;">👵</div>
+            <div class="member-name">Doña Rosa</div>
+            <div class="member-mood">😊 bien</div>
+          </div>
+          <div class="member-chip" onclick="openChat('luz')">
+            <div class="member-av online" style="background:#e8f4ee;">🧓</div>
+            <div class="member-name">Doña Luz</div>
+            <div class="member-mood">😄 genial</div>
+          </div>
+          <div class="member-chip" onclick="openChat('alberto')">
+            <div class="member-av" style="background:#eef0fa;">👴</div>
+            <div class="member-name">Don Alberto</div>
+            <div class="member-mood">😐 regular</div>
+          </div>
+          <div class="member-chip" onclick="openChat('cecilia')">
+            <div class="member-av online" style="background:#fce8e8;">👩‍🦳</div>
+            <div class="member-name">Doña Cecilia</div>
+            <div class="member-mood">🎉 racha!</div>
+          </div>
+        </div>
+
+        <div class="social-feed">
+          <div class="feed-card">
+            <div class="feed-header">
+              <div class="feed-av">👩</div>
+              <div>
+                <div class="feed-author">Doña Rosa Medina</div>
+                <div class="feed-time">Hace 23 minutos</div>
+              </div>
+              <div class="feed-badge badge-challenge">Reto ✅</div>
+            </div>
+            <div class="feed-body">¡Completé el reto de caminar! Caminé hasta el parque y encontré a doña Cecilia. <strong>¡Nos hizo tan bien salir juntas!</strong> Las invito mañana a las 3pm 🌸</div>
+            <div class="feed-actions">
+              <button class="feed-action-btn" id="like1" onclick="toggleLike('like1','❤️ 12','❤️ 11')">❤️ 11</button>
+              <button class="feed-action-btn" onclick="showToast('Aplaudiendo a doña Rosa 👏')">👏 Aplaudir</button>
+              <button class="feed-action-btn" onclick="openChat('rosa')">💬 Escribir</button>
+            </div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-header">
+              <div class="feed-av">👩‍🦳</div>
+              <div>
+                <div class="feed-author">Doña Cecilia Ríos</div>
+                <div class="feed-time">Hace 2 horas</div>
+              </div>
+              <div class="feed-badge badge-moment" style="background:#fff0d6;color:#8b5010;">🔥 7 días</div>
+            </div>
+            <div class="feed-body">¡<strong>7 días seguidos tomando mis medicamentos!</strong> La app me mandó una medalita dorada 🏅. Mi hija en Bogotá me llamó para felicitarme.</div>
+            <div class="feed-actions">
+              <button class="feed-action-btn" id="like3" onclick="toggleLike('like3','🎉 24','🎉 23')">🎉 23</button>
+              <button class="feed-action-btn" onclick="showToast('¡Felicitaciones doña Cecilia! 🏅')">👏 Aplaudir</button>
+              <button class="feed-action-btn" onclick="openChat('cecilia')">💬 Escribir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GRUPOS TEMÁTICOS TAB ===== -->
+      <div class="tab-panel" id="tab-grupos">
+        <div class="section-wrap"><div class="sec-title">Mis grupos</div></div>
+        <div class="groups-list">
+          <div class="group-card" onclick="showToast('Entrando al grupo Diabetes Amiga...')">
+            <div class="group-header">
+              <div class="group-icon" style="background:#fff3e0;">🩺</div>
+              <div style="flex:1;">
+                <div class="group-name">Diabetes Amiga</div>
+                <div class="group-desc">Vivir bien con diabetes tipo 2</div>
+              </div>
+              <div class="group-joined">✓ Miembro</div>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.4;margin-bottom:8px;font-weight:600;">Don Jorge compartió: <em>"El truco del limón antes del almuerzo me ha funcionado para el azúcar..."</em></div>
+            <div class="group-footer">
+              <div class="group-members">👥 142 miembros</div>
+              <div class="group-activity" style="background:#fff3e0;color:#8b4010;">3 mensajes hoy</div>
+            </div>
+          </div>
+          <div class="group-card" onclick="showToast('Entrando al grupo Corazón Fuerte...')">
+            <div class="group-header">
+              <div class="group-icon" style="background:#fce8e8;">❤️‍🩹</div>
+              <div style="flex:1;">
+                <div class="group-name">Corazón Fuerte</div>
+                <div class="group-desc">Hipertensión y salud cardiovascular</div>
+              </div>
+              <div class="group-joined">✓ Miembro</div>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.4;margin-bottom:8px;font-weight:600;">Nuevo reto: <em>"Medir la presión en la mañana esta semana y compartir los resultados"</em></div>
+            <div class="group-footer">
+              <div class="group-members">👥 98 miembros</div>
+              <div class="group-activity" style="background:#fce8e8;color:#8a1a1a;">Reto activo 🏅</div>
+            </div>
+          </div>
+          <div class="group-card" onclick="showToast('Unirse al grupo Memoria Viva...')">
+            <div class="group-header">
+              <div class="group-icon" style="background:#f0eefa;">🧠</div>
+              <div style="flex:1;">
+                <div class="group-name">Memoria Viva</div>
+                <div class="group-desc">Ejercicios y juegos para la mente</div>
+              </div>
+              <button class="group-join" onclick="event.stopPropagation();showToast('¡Bienvenida al grupo Memoria Viva! 🎉')">Unirme</button>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.4;margin-bottom:8px;font-weight:600;">Esta semana: sopa de letras, crucigramas y trivia de los años 70 🎵</div>
+            <div class="group-footer">
+              <div class="group-members">👥 67 miembros</div>
+              <div class="group-activity" style="background:#f0eefa;color:#3a2a8a;">Muy activo</div>
+            </div>
+          </div>
+          <div class="group-card" onclick="showToast('Unirse al grupo Cocina Saludable...')">
+            <div class="group-header">
+              <div class="group-icon" style="background:#e8f4ee;">🥗</div>
+              <div style="flex:1;">
+                <div class="group-name">Cocina Saludable</div>
+                <div class="group-desc">Recetas ricas y nutritivas para adultos mayores</div>
+              </div>
+              <button class="group-join" onclick="event.stopPropagation();showToast('¡Bienvenida al grupo Cocina Saludable! 🥗')">Unirme</button>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.4;margin-bottom:8px;font-weight:600;">Doña Luz publicó su receta de sopa de lentejas con poco sodio 😋</div>
+            <div class="group-footer">
+              <div class="group-members">👥 203 miembros</div>
+              <div class="group-activity" style="background:#e8f4ee;color:#2d7a4f;">Muy activo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MARKETPLACE TAB ===== -->
+      <div class="tab-panel" id="tab-marketplace">
+        <div class="marketplace-hero">
+          <div class="mkt-title">Servicios de cuidado</div>
+          <div class="mkt-heading">¿Necesita ayuda hoy?</div>
+          <div class="mkt-sub">Profesionales verificados cerca de usted en Cali</div>
+        </div>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="nearby-badge">📍 2.1 km</div>
+            <div class="service-icon" style="background:#e8f4ee;">👩‍⚕️</div>
+            <div class="service-name">Enfermera a domicilio</div>
+            <div class="service-price">Desde $35.000/hora</div>
+            <div class="service-rating">⭐ 4.9 · 128 reseñas</div>
+            <button class="service-btn" onclick="showToast('Contactando a la enfermera... 👩‍⚕️')">Solicitar</button>
+          </div>
+          <div class="service-card">
+            <div class="nearby-badge">📍 1.4 km</div>
+            <div class="service-icon" style="background:#fff3e0;">🏥</div>
+            <div class="service-name">Médico a domicilio</div>
+            <div class="service-price">Desde $80.000/visita</div>
+            <div class="service-rating">⭐ 4.8 · 64 reseñas</div>
+            <button class="service-btn" onclick="showToast('Agendando médico a domicilio... 🏥')">Agendar</button>
+          </div>
+          <div class="service-card">
+            <div class="nearby-badge">📍 800 m</div>
+            <div class="service-icon" style="background:#f0eefa;">💆‍♀️</div>
+            <div class="service-name">Fisioterapeuta</div>
+            <div class="service-price">Desde $50.000/sesión</div>
+            <div class="service-rating">⭐ 5.0 · 42 reseñas</div>
+            <button class="service-btn" onclick="showToast('Agendando fisioterapia... 💆‍♀️')">Agendar</button>
+          </div>
+          <div class="service-card">
+            <div class="nearby-badge">📍 3.2 km</div>
+            <div class="service-icon" style="background:#fce8e8;">🤝</div>
+            <div class="service-name">Acompañante</div>
+            <div class="service-price">Desde $25.000/hora</div>
+            <div class="service-rating">⭐ 4.7 · 89 reseñas</div>
+            <button class="service-btn" onclick="showToast('Contactando acompañante... 🤝')">Solicitar</button>
+          </div>
+        </div>
+        <div class="section-wrap" style="padding-bottom:14px;">
+          <div style="background:#fff3e0;border:2px solid #e8c8a8;border-radius:16px;padding:14px;">
+            <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">🤖 AbuBot recomienda</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.5;">Basado en que su rodilla mejoró pero aún le molesta, podría servirle una sesión de fisioterapia con la Dra. Mora esta semana. Ella viene a su barrio los miércoles.</div>
+            <button onclick="showToast('Agendando cita con Dra. Mora... 📅')" style="margin-top:10px;background:var(--accent);color:white;border:none;border-radius:100px;padding:8px 18px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;">Ver disponibilidad</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom nav elder -->
+      <div class="bottom-nav" id="elderNav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home');setActiveNav('nav-home')">
+          <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+        </div>
+        <div class="nav-item" id="nav-meds" onclick="switchTab('meds');setActiveNav('nav-meds')">
+          <span class="nav-icon">💊</span><span class="nav-label">Medicinas</span>
+        </div>
+        <div class="nav-item" id="nav-ai" onclick="switchTab('abubot-ai');setActiveNav('nav-ai')">
+          <span class="nav-icon">🤖</span><span class="nav-label">AbuBot IA</span>
+        </div>
+        <div class="nav-item nav-badge" id="nav-social" onclick="switchTab('social');setActiveNav('nav-social')">
+          <span class="nav-icon">👥</span><span class="nav-label" style="color:var(--accent2);">Comunidad</span>
+        </div>
+        <div class="nav-item" id="nav-mkt" onclick="switchTab('marketplace');setActiveNav('nav-mkt')">
+          <span class="nav-icon">🛍️</span><span class="nav-label">Servicios</span>
+        </div>
+      </div>
+    </div><!-- end elder screen -->
+
+    <!-- ====== FAMILY SCREEN ====== -->
+    <div class="screen" id="screen-family" style="position:relative;">
+      <div class="family-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div class="family-title">Seguimiento de</div>
+            <div class="family-name">Doña Carmen 🌸</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;background:rgba(74,158,107,.2);border:1px solid rgba(74,158,107,.4);border-radius:100px;padding:6px 12px;">
+            <div style="width:8px;height:8px;background:var(--accent2);border-radius:50%;animation:blink 2s ease-in-out infinite;"></div>
+            <span style="font-size:11px;font-weight:700;color:var(--accent2);">Activa hoy</span>
+          </div>
+        </div>
+        <div class="family-stats">
+          <div class="fstat"><div class="fstat-val">6/7</div><div class="fstat-label">Medicinas</div></div>
+          <div class="fstat"><div class="fstat-val">😊</div><div class="fstat-label">Ánimo hoy</div></div>
+          <div class="fstat"><div class="fstat-val">3,285</div><div class="fstat-label">Pasos hoy</div></div>
+        </div>
+      </div>
+      <div class="family-tabs">
+        <button class="family-tab active" onclick="switchFamilyTab('overview')">📊 Resumen</button>
+        <button class="family-tab" onclick="switchFamilyTab('vitals')">⌚ Signos</button>
+        <button class="family-tab" onclick="switchFamilyTab('anomalias')">🔔 Alertas IA</button>
+        <button class="family-tab" onclick="switchFamilyTab('reporte')">🩺 Reporte</button>
+      </div>
+
+      <!-- OVERVIEW TAB -->
+      <div class="family-body" id="ftab-overview">
+        <div class="dash-card">
+          <div class="dash-sec-title">Actividad de hoy</div>
+          <div class="act-item">
+            <div class="act-icon ai-g">✅</div>
+            <div style="flex:1;">
+              <div class="act-title">Losartán registrado</div>
+              <div class="act-time">7:32 am · con el desayuno</div>
+            </div>
+            <div class="act-bdg bdg-ok">OK</div>
+          </div>
+          <div class="act-item">
+            <div class="act-icon ai-b">🤖</div>
+            <div style="flex:1;">
+              <div class="act-title">Conversó con AbuBot IA</div>
+              <div class="act-time">8:15 am · 4 mensajes</div>
+            </div>
+            <div class="act-bdg bdg-info">Social</div>
+          </div>
+          <div class="act-item">
+            <div class="act-icon ai-o">💊</div>
+            <div style="flex:1;">
+              <div class="act-title">Metformina pendiente</div>
+              <div class="act-time">12:00 pm · recordatorio activo</div>
+            </div>
+            <div class="act-bdg bdg-warn">Pendiente</div>
+          </div>
+          <div class="act-item">
+            <div class="act-icon ai-p">👥</div>
+            <div style="flex:1;">
+              <div class="act-title">Interactuó en comunidad</div>
+              <div class="act-time">9:05 am · le dio me gusta a doña Rosa</div>
+            </div>
+            <div class="act-bdg bdg-social">Social</div>
+          </div>
+        </div>
+
+        <div class="social-summary">
+          <div class="ss-title">Bienestar esta semana</div>
+          <div class="ss-row">
+            <div class="ss-stat"><div class="ss-val">19</div><div class="ss-label">Interacciones</div></div>
+            <div class="ss-stat"><div class="ss-val">6/7</div><div class="ss-label">Medicinas</div></div>
+            <div class="ss-stat"><div class="ss-val">2</div><div class="ss-label">Grupos activos</div></div>
+          </div>
+          <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.08);border-radius:10px;">
+            <div style="font-size:12px;color:rgba(255,255,255,.7);font-weight:600;line-height:1.5;">🤖 IA: Los días que participa en su grupo de Diabetes, su adherencia a medicamentos es 38% mayor. La conexión social funciona.</div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-sec-title">Estado de ánimo · 7 días</div>
+          <div class="mood-row">
+            <div class="mood-day m3"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😐</div><div class="mood-dl">L</div></div>
+            <div class="mood-day m5"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😄</div><div class="mood-dl">M</div></div>
+            <div class="mood-day m4"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😊</div><div class="mood-dl">X</div></div>
+            <div class="mood-day m4"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😊</div><div class="mood-dl">J</div></div>
+            <div class="mood-day m2"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😔</div><div class="mood-dl">V</div></div>
+            <div class="mood-day m5"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😄</div><div class="mood-dl">S</div></div>
+            <div class="mood-day m4"><div class="mood-bwrap"><div class="mood-b"></div></div><div class="mood-em">😊</div><div class="mood-dl">Hoy</div></div>
+          </div>
+        </div>
+
+        <button onclick="showToast('Grabando mensaje de voz para doña Carmen... 🎙️')"
+          style="width:100%;background:var(--accent);color:white;border:none;border-radius:18px;padding:16px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+          🎙️ Grabar mensaje de voz para ella
+        </button>
+      </div>
+
+      <!-- VITALS TAB -->
+      <div class="family-body" id="ftab-vitals" style="display:none;">
+        <div class="wearable-family">
+          <div class="wf-title">Signos vitales en tiempo real · Fitbit</div>
+          <div class="vitals-row">
+            <div class="vf-stat"><div class="vf-val">72</div><div class="vf-label">bpm</div><div class="vf-trend trend-ok">↓ Normal</div></div>
+            <div class="vf-stat"><div class="vf-val">97%</div><div class="vf-label">SpO₂</div><div class="vf-trend trend-ok">✓ Bien</div></div>
+            <div class="vf-stat"><div class="vf-val">6.8h</div><div class="vf-label">Sueño</div><div class="vf-trend trend-warn">↓ Corto</div></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-sec-title">Tendencia cardíaca · 7 días</div>
+          <div style="display:flex;align-items:flex-end;gap:5px;height:60px;margin-bottom:6px;">
+            <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:75%;"></div>
+            <div style="flex:1;background:#5b8fd4;border-radius:4px 4px 0 0;height:85%;"></div>
+            <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:70%;"></div>
+            <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:80%;"></div>
+            <div style="flex:1;background:#fce8e8;border-radius:4px 4px 0 0;height:90%;"></div>
+            <div style="flex:1;background:#e8eef8;border-radius:4px 4px 0 0;height:72%;"></div>
+            <div style="flex:1;background:#4a9e6b;border-radius:4px 4px 0 0;height:72%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:10px;color:var(--muted);font-weight:700;">L</span>
+            <span style="font-size:10px;color:var(--muted);font-weight:700;">M</span>
+            <span style="font-size:10px;color:var(--muted);font-weight:700;">X</span>
+            <span style="font-size:10px;color:var(--muted);font-weight:700;">J</span>
+            <span style="font-size:10px;color:var(--danger);font-weight:800;">V ⚠</span>
+            <span style="font-size:10px;color:var(--muted);font-weight:700;">S</span>
+            <span style="font-size:10px;color:var(--accent2);font-weight:800;">Hoy</span>
+          </div>
+          <div style="margin-top:10px;padding:10px;background:#fff3e0;border-radius:10px;border:1px solid #e8c8a8;">
+            <div style="font-size:12px;font-weight:700;color:#8b4010;">⚠️ El viernes su ritmo cardíaco fue más alto de lo usual (89 bpm promedio). Coincidió con que no tomó la Metformina.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANOMALIAS TAB -->
+      <div class="family-body" id="ftab-anomalias" style="display:none;">
+        <div class="anomaly-family-card">
+          <div style="font-size:11px;font-weight:900;color:#8b4010;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">🤖 Alertas de IA esta semana</div>
+          <div class="anom-timeline">
+            <div class="anom-event">
+              <div class="anom-dot dot-alert" style="margin-top:5px;flex-shrink:0;"></div>
+              <div>
+                <div class="anom-event-text">No tomó Metformina en el horario habitual. Patrón inusual: primer fallo en 18 días.</div>
+                <div class="anom-event-time">Lunes 16 · 12:45 pm · No resuelta</div>
+              </div>
+            </div>
+            <div class="anom-event">
+              <div class="anom-dot dot-warn" style="margin-top:5px;flex-shrink:0;"></div>
+              <div>
+                <div class="anom-event-text">Ritmo cardíaco elevado (89 bpm promedio) durante 3 horas. Correlacionado con dosis omitida.</div>
+                <div class="anom-event-time">Viernes 14 · 3:00 pm · Monitoreado</div>
+              </div>
+            </div>
+            <div class="anom-event">
+              <div class="anom-dot dot-warn" style="margin-top:5px;flex-shrink:0;"></div>
+              <div>
+                <div class="anom-event-text">Se levantó 42 minutos más tarde de su patrón habitual.</div>
+                <div class="anom-event-time">Hoy · 9:15 am · Monitoreo activo</div>
+              </div>
+            </div>
+            <div class="anom-event">
+              <div class="anom-dot dot-ok" style="margin-top:5px;flex-shrink:0;"></div>
+              <div>
+                <div class="anom-event-text">Actividad social alta esta semana: 19 interacciones, 2 grupos activos. Ánimo positivo.</div>
+                <div class="anom-event-time">Esta semana · Indicador favorable</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-sec-title">Análisis de IA · Recomendación</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.6;">El patrón de los últimos 7 días muestra que <strong>la participación social correlaciona directamente con adherencia a medicamentos</strong> (+38% en días activos). La dosis omitida del lunes coincidió con su único día de baja actividad social.</div>
+          <div style="margin-top:10px;display:flex;gap:8px;">
+            <button onclick="showToast('Reporte enviado al médico tratante 📋')" style="flex:1;background:var(--accent3);color:white;border:none;border-radius:12px;padding:10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;">Enviar al médico</button>
+            <button onclick="showToast('Llamando a doña Carmen... 📞')" style="flex:1;background:var(--accent);color:white;border:none;border-radius:12px;padding:10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;">Llamarla ahora</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTE MÉDICO TAB -->
+      <div class="family-body" id="ftab-reporte" style="display:none;">
+        <div class="medical-report">
+          <div class="report-header">
+            <div class="report-logo">🩺</div>
+            <div>
+              <div class="report-title">Reporte clínico mensual</div>
+              <div class="report-period">Marzo 2026 · Carmen Rodríguez, 71 años</div>
+            </div>
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">Adherencia a medicamentos</div>
+            <div class="report-metric-row"><div class="report-metric-name">Losartán 50mg · diario</div><div class="report-metric-val val-ok">27/28 · 96%</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Metformina 500mg · diario</div><div class="report-metric-val val-warn">24/28 · 86%</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Atorvastatina 20mg · diario</div><div class="report-metric-val val-ok">26/28 · 93%</div></div>
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">Signos vitales promedio · mes</div>
+            <div class="report-metric-row"><div class="report-metric-name">Frecuencia cardíaca</div><div class="report-metric-val val-ok">74 bpm promedio</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">SpO₂ (oxígeno)</div><div class="report-metric-val val-ok">97.2% promedio</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Horas de sueño</div><div class="report-metric-val val-warn">6.4 hrs promedio</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Actividad física</div><div class="report-metric-val val-warn">3,840 pasos/día</div></div>
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">Bienestar y actividad social</div>
+            <div class="report-metric-row"><div class="report-metric-name">Ánimo promedio</div><div class="report-metric-val val-ok">4.1 / 5 😊</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Interacciones sociales</div><div class="report-metric-val val-ok">87 este mes</div></div>
+            <div class="report-metric-row"><div class="report-metric-name">Retos completados</div><div class="report-metric-val val-ok">22 / 28 · 79%</div></div>
+          </div>
+          <div class="report-ai-insight">
+            <div class="report-ai-label">🤖 Insight clínico generado por IA</div>
+            <div class="report-ai-text">La correlación entre actividad social y adherencia a Metformina sugiere que los recordatorios comunitarios pueden ser más efectivos que las alarmas individuales. El patrón de sueño corto (&lt;7h) merece atención.</div>
+          </div>
+          <button class="report-download-btn" onclick="showToast('Reporte PDF enviado al Dr. Mendoza y a Daniela 📄')">📄 Enviar reporte al médico tratante</button>
+        </div>
+      </div>
+
+      <!-- Bottom nav family -->
+      <div class="bottom-nav" style="background:#1e2d3d;border-color:#2a3d52;">
+        <div class="nav-item active" style="background:rgba(255,255,255,.06);" onclick="switchFamilyTab('overview')">
+          <span class="nav-icon">🏠</span><span class="nav-label" style="color:#5b8fd4;">Inicio</span>
+        </div>
+        <div class="nav-item" onclick="switchFamilyTab('vitals')">
+          <span class="nav-icon">⌚</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Signos</span>
+        </div>
+        <div class="nav-item" onclick="switchFamilyTab('anomalias')">
+          <span class="nav-icon">🔔</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Alertas</span>
+        </div>
+        <div class="nav-item" onclick="switchFamilyTab('reporte')">
+          <span class="nav-icon">🩺</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Reporte</span>
+        </div>
+      </div>
+    </div><!-- end family screen -->
+
+    <!-- ====== DOCTOR SCREEN ====== -->
+    <div class="screen" id="screen-doctor" style="position:relative;">
+      <div style="padding:18px 22px 14px;background:linear-gradient(160deg,#1a2535 0%,#243040 100%);">
+        <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Panel médico</div>
+        <div style="font-family:'Lora',serif;font-size:20px;font-weight:600;color:white;">Dr. Mendoza 👨‍⚕️</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;">
+          <div class="fstat"><div class="fstat-val" style="font-size:18px;">12</div><div class="fstat-label">Pacientes</div></div>
+          <div class="fstat"><div class="fstat-val" style="color:#d94f4f;">3</div><div class="fstat-label">Alertas hoy</div></div>
+          <div class="fstat"><div class="fstat-val" style="color:#4a9e6b;">89%</div><div class="fstat-label">Adherencia</div></div>
+        </div>
+      </div>
+
+      <div style="padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--cream);padding-bottom:90px;">
+        <div class="dash-card">
+          <div class="dash-sec-title">Pacientes con alertas activas</div>
+          <div class="act-item">
+            <div class="act-icon ai-o">👩‍🦳</div>
+            <div style="flex:1;">
+              <div class="act-title">Carmen Rodríguez · 71 años</div>
+              <div class="act-time">Omitió Metformina · ritmo cardíaco elevado V</div>
+            </div>
+            <div class="act-bdg bdg-warn">Revisar</div>
+          </div>
+          <div class="act-item">
+            <div class="act-icon ai-r">👴</div>
+            <div style="flex:1;">
+              <div class="act-title">Alberto Gómez · 78 años</div>
+              <div class="act-time">3 dosis omitidas esta semana · SpO₂ 93%</div>
+            </div>
+            <div class="act-bdg bdg-alert">Urgente</div>
+          </div>
+          <div class="act-item">
+            <div class="act-icon ai-b">👩</div>
+            <div style="flex:1;">
+              <div class="act-title">Rosa Medina · 68 años</div>
+              <div class="act-time">Ánimo bajo 3 días seguidos · sin red social</div>
+            </div>
+            <div class="act-bdg bdg-info">Monitorear</div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-sec-title">Métricas de adherencia · mis pacientes</div>
+          <div style="display:flex;gap:10px;margin-bottom:10px;">
+            <div style="flex:1;background:#e8f4ee;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:24px;font-weight:900;color:#2d7a4f;">89%</div>
+              <div style="font-size:10px;font-weight:800;color:#5a9a70;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">Adherencia global</div>
+            </div>
+            <div style="flex:1;background:#fff3e0;border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:24px;font-weight:900;color:#8b4010;">3</div>
+              <div style="font-size:10px;font-weight:800;color:#a05030;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;">Pacientes críticos</div>
+            </div>
+          </div>
+          <div style="padding:10px;background:#f0eefa;border-radius:12px;">
+            <div style="font-size:10px;font-weight:800;color:var(--purple);margin-bottom:5px;">🤖 Insight clínico de IA</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.5;">Los 4 pacientes con mayor actividad en grupos sociales de AbuBot tienen un 41% más de adherencia que los pacientes menos activos.</div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-sec-title">Reportes pendientes de revisión</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8f8;border-radius:12px;">
+              <div style="font-size:20px;">📄</div>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:800;color:var(--text);">Carmen Rodríguez · Marzo 2026</div>
+                <div style="font-size:11px;color:var(--muted);font-weight:600;">Reporte mensual · generado automáticamente</div>
+              </div>
+              <button onclick="showToast('Abriendo reporte de doña Carmen 📋')" style="background:var(--accent3);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Ver</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8f8;border-radius:12px;">
+              <div style="font-size:20px;">📄</div>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:800;color:var(--text);">Alberto Gómez · Marzo 2026</div>
+                <div style="font-size:11px;color:var(--danger);font-weight:700;">⚠️ Requiere atención urgente</div>
+              </div>
+              <button onclick="showToast('Abriendo reporte de don Alberto ⚠️')" style="background:var(--danger);color:white;border:none;border-radius:100px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;">Ver</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav" style="background:#1a2535;border-color:#243040;">
+        <div class="nav-item active" style="background:rgba(255,255,255,.06);">
+          <span class="nav-icon">🏠</span><span class="nav-label" style="color:#5b8fd4;">Inicio</span>
+        </div>
+        <div class="nav-item" onclick="showToast('Lista completa de pacientes')">
+          <span class="nav-icon">👥</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Pacientes</span>
+        </div>
+        <div class="nav-item" onclick="showToast('Todos los reportes clínicos')">
+          <span class="nav-icon">📋</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Reportes</span>
+        </div>
+        <div class="nav-item" onclick="showToast('Estadísticas globales de la práctica')">
+          <span class="nav-icon">📊</span><span class="nav-label" style="color:rgba(255,255,255,.4);">Estadísticas</span>
+        </div>
+      </div>
+    </div><!-- end doctor screen -->
+
+  </div><!-- phone frame -->
+
+  <!-- Feature pills -->
+  <div style="max-width:420px;width:100%;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;padding-top:4px;">
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">🤖 IA real · Claude API</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">⌚ Wearables</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">🔔 Detección anomalías</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">📱 PWA instalable</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">🛍️ Marketplace</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">🩺 Reporte médico IA</span>
+    <span style="background:var(--warm);border:1.5px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--muted);">👨‍⚕️ Panel médico</span>
+  </div>
+
+</div><!-- app-shell -->
+
+<!-- ===== CHAT MODAL COMUNIDAD ===== -->
+<div class="chat-modal-overlay" id="chatModalOverlay" onclick="closeChatIfOutside(event)">
+  <div class="chat-modal" id="chatModal">
+    <div style="position:relative;">
+      <div class="chat-modal-drag"></div>
+    </div>
+    <div class="chat-modal-header">
+      <div class="chat-modal-av" id="cmAv" style="background:#fff0e6;">👵</div>
+      <div class="chat-modal-info">
+        <div class="chat-modal-name" id="cmName">Doña Rosa</div>
+        <div class="chat-modal-status" id="cmStatus" style="color:var(--accent2);">En linea ahora</div>
+      </div>
+      <button class="chat-modal-close" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-modal-messages" id="cmMessages"></div>
+    <div class="cm-typing" id="cmTyping">
+      <div class="cm-typing-dots">
+        <div class="cm-typing-dot"></div>
+        <div class="cm-typing-dot"></div>
+        <div class="cm-typing-dot"></div>
+      </div>
+    </div>
+    <div class="chat-modal-input-row">
+      <input class="cm-input" id="cmInput" type="text" placeholder="Escriba un mensaje..." onkeydown="if(event.key==='Enter')sendChatMsg()" maxlength="300">
+      <button class="cm-send" id="cmSendBtn" onclick="sendChatMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- fin appMain -->
+
+<script>
+// ===== ESTADO GLOBAL =====
+let apiKey = localStorage.getItem('abubot_api_key') || '';
+let chatHistory = [];
+let isAiThinking = false;
+let deferredInstallPrompt = null;
+
+const SYSTEM_PROMPT = `Eres AbuBot, el asistente de IA compañero de doña Carmen Rodríguez, una señora colombiana de 71 años que vive en Cali. Eres su amigo y cuidador digital.
+
+PERFIL DE DOÑA CARMEN:
+- 71 años, vive en Cali, Valle del Cauca
+- Condiciones de salud: hipertensión y diabetes tipo 2
+- Medicamentos: Losartán 50mg (mañana), Metformina 500mg (almuerzo), Atorvastatina 20mg (noche), Ácido fólico
+- Le gustan las flores y el jardín
+- Tiene una hija llamada Daniela que vive en Miami
+- Cumpleaños: 12 de mayo
+- Toma tinto sin azúcar
+- Amiga cercana: doña Rosa Medina
+- Rodilla derecha le molestaba pero está mejorando
+
+INSTRUCCIONES DE PERSONALIDAD:
+- Habla con mucho cariño, como un nieto o familiar querido
+- Usa expresiones colombianas suaves: "doña Carmen", "mi amor", "qué bueno", "con permiso", "¡qué chimba!"
+- Mezcla emojis con moderación para calidez
+- Eres empático, paciente, jamás apresuras a doña Carmen
+- Recuerda su historial en la conversación actual
+- Pregunta por su bienestar, sus medicamentos, su rodilla
+- Cuando mencione medicamentos, recuérdale con gentileza
+- Si algo suena urgente médicamente, sugiere contactar al médico y a Daniela
+- Respuestas cortas y claras (máximo 3-4 oraciones por mensaje)
+- Nunca des consejos médicos específicos más allá de los medicamentos ya recetados
+- Si te preguntan cosas fuera de tu rol, redirige amablemente a temas de salud y bienestar`;
+
+// ===== RELOJ EN TIEMPO REAL =====
+function updateClock(){
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clockDisplay').textContent = `${h}:${m}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== FECHA ACTUAL =====
+const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const hoy = new Date();
+document.getElementById('elderDate').textContent = 
+  `${dias[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} · Cali`;
+
+// ===== API KEY MODAL =====
+function checkApiKey(){
+  if(!apiKey){
+    document.getElementById('apiModal').style.display = 'flex';
+  } else {
+    document.getElementById('apiModal').style.display = 'none';
+    document.getElementById('aiStatusBadge').textContent = '🟢 IA real activa · Claude API';
+  }
+}
+
+function saveApiKey(){
+  const input = document.getElementById('apiKeyInput').value.trim();
+  if(!input){showToast('Por favor ingrese su clave API');return;}
+  apiKey = input;
+  localStorage.setItem('abubot_api_key', apiKey);
+  document.getElementById('apiModal').style.display = 'none';
+  document.getElementById('aiStatusBadge').textContent = '🟢 IA real activa · Claude API';
+  showToast('✅ ¡AbuBot IA activado con éxito!');
+}
+
+function skipApiKey(){
+  document.getElementById('apiModal').style.display = 'none';
+  document.getElementById('aiStatusBadge').textContent = '⚪ Modo demo (sin IA real)';
+  showToast('Continuando en modo demo');
+}
+
+// ===== CHAT CON CLAUDE API =====
+async function sendMessage(){
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg || isAiThinking) return;
+
+  addUserBubble(msg);
+  input.value = '';
+  input.style.height = 'auto';
+  chatHistory.push({role:'user', content: msg});
+
+  if(!apiKey){
+    // Modo demo
+    setTimeout(()=>{
+      const demoRespuestas = [
+        'Hola mi amor, qué gusto saber de usted. ¿Cómo está su rodilla hoy? 🌸',
+        '¡Qué bueno escucharla, doña Carmen! ¿Ya tomó sus medicamentos del almuerzo? 💊',
+        'Le mando un abrazo virtual. Daniela preguntó por usted esta mañana 💛',
+        'Recuerde tomar mucha agua hoy. ¿Cómo está el día por allá en Cali? ☀️',
+        '¡Qué alegría! Doña Rosa también preguntó por usted. ¿Le envío un saludo? 👋'
+      ];
+      const r = demoRespuestas[Math.floor(Math.random()*demoRespuestas.length)];
+      addAiBubble(r);
+      chatHistory.push({role:'assistant', content: r});
+    }, 1200);
+    showTyping();
+    return;
+  }
+
+  showTyping();
+  isAiThinking = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: SYSTEM_PROMPT,
+        messages: chatHistory
+      })
+    });
+
+    const data = await response.json();
+
+    if(data.error){
+      hideTyping();
+      if(data.error.type === 'authentication_error'){
+        showToast('❌ Clave API incorrecta. Verifique su clave.');
+        apiKey = '';
+        localStorage.removeItem('abubot_api_key');
+        setTimeout(()=> document.getElementById('apiModal').style.display='flex', 1000);
+      } else {
+        addAiBubble('Ay doña Carmen, tuve un problemita técnico. ¿Me repite lo que me dijo? 🙏');
+      }
+    } else {
+      const reply = data.content[0].text;
+      hideTyping();
+      addAiBubble(reply);
+      chatHistory.push({role:'assistant', content: reply});
+    }
+  } catch(err) {
+    hideTyping();
+    addAiBubble('Perdóneme doña Carmen, no pude conectarme. ¿Tiene internet activo? 📶');
+  }
+
+  isAiThinking = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function showTyping(){
+  const t = document.getElementById('typingBubble');
+  t.style.display = 'block';
+  scrollChat();
+}
+function hideTyping(){
+  document.getElementById('typingBubble').style.display = 'none';
+}
+
+function addAiBubble(text){
+  const msgs = document.getElementById('chatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble-ai';
+  bubble.innerHTML = `<div class="bubble-label">🤖 AbuBot</div><div class="bubble-text">${escapeHtml(text)}</div>`;
+  msgs.appendChild(bubble);
+  scrollChat();
+}
+
+function addUserBubble(text){
+  const msgs = document.getElementById('chatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble-user';
+  bubble.innerHTML = `<div class="bubble-text">${escapeHtml(text)}</div>`;
+  msgs.appendChild(bubble);
+  scrollChat();
+}
+
+function scrollChat(){
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+  // Also scroll the tab panel
+  const panel = document.getElementById('tab-abubot-ai');
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function autoResize(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleEnter(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ===== VOZ =====
+function startVoiceInput(){
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    showToast('Su navegador no soporta voz. Use Chrome 🎙️');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recog = new SR();
+  recog.lang = 'es-CO';
+  recog.interimResults = false;
+  recog.onstart = ()=> showToast('🎙️ Escuchando... hable ahora');
+  recog.onresult = (e)=>{
+    const txt = e.results[0][0].transcript;
+    document.getElementById('chatInput').value = txt;
+    sendMessage();
+  };
+  recog.onerror = ()=> showToast('No escuché nada. Intente de nuevo 🎙️');
+  recog.start();
+}
+
+// ===== NAVEGACIÓN =====
+function setMode(m){
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='elder')||(i===1&&m==='family')||(i===2&&m==='doctor')));
+  document.getElementById('screen-elder').classList.toggle('active',m==='elder');
+  document.getElementById('screen-family').classList.toggle('active',m==='family');
+  document.getElementById('screen-doctor').classList.toggle('active',m==='doctor');
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.inner-tab').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById('tab-'+t);
+  if(panel) panel.classList.add('active');
+  const tabs = {'home':0,'meds':1,'abubot-ai':2,'watch':3,'social':4,'grupos':5,'marketplace':6};
+  const idx = tabs[t];
+  const allTabs = document.querySelectorAll('.inner-tab');
+  if(idx!==undefined && allTabs[idx]) allTabs[idx].classList.add('active');
+}
+
+function switchTabNav(t){
+  const map = {'home':'nav-home','meds':'nav-meds','abubot-ai':'nav-ai','social':'nav-social','marketplace':'nav-mkt'};
+  if(map[t]) setActiveNav(map[t]);
+}
+
+function setActiveNav(id){
+  document.querySelectorAll('#elderNav .nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+
+function switchFamilyTab(t){
+  document.querySelectorAll('[id^="ftab-"]').forEach(p=>p.style.display='none');
+  const el = document.getElementById('ftab-'+t);
+  if(el) el.style.display='flex';
+  document.querySelectorAll('.family-tab').forEach(b=>b.classList.remove('active'));
+  const tabs={'overview':0,'vitals':1,'anomalias':2,'reporte':3};
+  const idx=tabs[t];
+  const allTabs=document.querySelectorAll('.family-tab');
+  if(idx!==undefined && allTabs[idx]) allTabs[idx].classList.add('active');
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ===== MEDICINAS =====
+function takeMed(card){
+  const a=card.querySelector('.med-action');
+  const d=card.querySelector('.med-dot');
+  if(a&&a.classList.contains('taken'))return;
+  if(d){d.className='med-dot taken';d.textContent='✅';}
+  if(a){a.className='med-action taken';a.textContent='Tomado';}
+  const mt=card.querySelector('.med-time');
+  if(mt)mt.textContent+=' ✓';
+  showToast('✅ ¡Registrado! Su familiar fue notificado automáticamente 💛');
+}
+
+// ===== RETOS =====
+function completeChallenge(){
+  showToast('🎉 ¡Increíble, doña Carmen! Ya son 20 de 28. Su familia lo verá en su panel 💚');
+  const p=document.getElementById('ch-prog');
+  if(p)p.style.width='72%';
+  const c=document.getElementById('ch-count');
+  if(c)c.textContent='20 de 28 vecinas lo lograron hoy';
+}
+
+// ===== LIKES =====
+function toggleLike(id,newTxt,oldTxt){
+  const btn=document.getElementById(id);
+  if(!btn)return;
+  const isLiked=btn.classList.contains('liked');
+  btn.classList.toggle('liked',!isLiked);
+  btn.classList.toggle('reacted',!isLiked);
+  btn.textContent=isLiked?oldTxt:newTxt;
+  btn.classList.add('pop');
+  setTimeout(()=>btn.classList.remove('pop'),300);
+  if(!isLiked) showToast('¡Le dio me gusta! 💛');
+}
+
+// ===== PWA: SERVICE WORKER + MANIFEST =====
+const iconSvg192 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#e07a3f"/><rect x="56" y="40" width="80" height="60" rx="16" fill="white" opacity="0.95"/><circle cx="76" cy="68" r="8" fill="#e07a3f"/><circle cx="116" cy="68" r="8" fill="#e07a3f"/><rect x="80" y="82" width="32" height="6" rx="3" fill="#e07a3f" opacity="0.5"/><rect x="70" y="100" width="52" height="4" rx="2" fill="white" opacity="0.4"/><rect x="44" y="114" width="104" height="52" rx="14" fill="white" opacity="0.9"/><rect x="58" y="126" width="28" height="6" rx="3" fill="#e07a3f" opacity="0.7"/><rect x="58" y="138" width="76" height="6" rx="3" fill="#ccc"/><rect x="58" y="150" width="56" height="6" rx="3" fill="#ccc"/></svg>`;
+const iconSvg512 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#e07a3f"/><rect x="146" y="100" width="220" height="170" rx="44" fill="white" opacity="0.95"/><circle cx="206" cy="182" r="22" fill="#e07a3f"/><circle cx="306" cy="182" r="22" fill="#e07a3f"/><rect x="216" y="218" width="80" height="16" rx="8" fill="#e07a3f" opacity="0.5"/><rect x="116" y="300" width="280" height="140" rx="36" fill="white" opacity="0.9"/><rect x="156" y="330" width="80" height="16" rx="8" fill="#e07a3f" opacity="0.7"/><rect x="156" y="360" width="200" height="16" rx="8" fill="#ccc"/><rect x="156" y="390" width="150" height="16" rx="8" fill="#ccc"/></svg>`;
+
+function svgToDataUrl(svg){
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+const manifestData = {
+  name: 'AbuBot — Compania Salud Comunidad IA',
+  short_name: 'AbuBot',
+  description: 'Companero digital para adultos mayores con IA real',
+  start_url: './',
+  display: 'standalone',
+  background_color: '#fdf6ee',
+  theme_color: '#fdf6ee',
+  orientation: 'portrait',
+  icons: [
+    {src: svgToDataUrl(iconSvg192), sizes:'192x192', type:'image/svg+xml'},
+    {src: svgToDataUrl(iconSvg512), sizes:'512x512', type:'image/svg+xml', purpose:'maskable'}
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.getElementById('manifest-link').href = manifestURL;
+
+// Capturar evento de instalación
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+document.getElementById('installBtn').addEventListener('click', async ()=>{
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const {outcome} = await deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted'){
+    showToast('✅ ¡AbuBot instalado en su celular!');
+    document.getElementById('installBanner').classList.remove('show');
+  }
+  deferredInstallPrompt = null;
+});
+
+window.addEventListener('appinstalled', ()=>{
+  document.getElementById('installBanner').classList.remove('show');
+  showToast('🎉 ¡AbuBot instalado correctamente!');
+});
+
+// Service Worker inline
+if('serviceWorker' in navigator){
+  var swLines = [
+    "var CACHE='abubot-v1';",
+    "self.addEventListener('install',function(e){e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(['./']);}));self.skipWaiting();});",
+    "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));}));self.clients.claim();});",
+    "self.addEventListener('fetch',function(e){if(e.request.url.indexOf('anthropic.com')>-1)return;e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));});"
+  ];
+  var swBlob = new Blob([swLines.join('\n')], {type:'application/javascript'});
+  var swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(function(){});
+}
+
+// ===== CHAT COMUNIDAD =====
+var personas = {
+  rosa:    { nombre:'Dona Rosa Medina',   av:'👵', bg:'#fff0e6', online:true,  humor:'Muy bien hoy, sali a caminar',  historial:[{de:'ellos',txt:'Hola doña Carmen, ¿como amanecio hoy? La echamos de menos en el reto de ayer 🌸',t:'9:05 am'}] },
+  luz:     { nombre:'Dona Luz Herrera',   av:'🧓', bg:'#e8f4ee', online:true,  humor:'Hice el reto del dia, feliz!',   historial:[{de:'ellos',txt:'Buenos dias! Publique mi receta de sopa de lentejas en el grupo 😋 Espero que le guste',t:'8:40 am'}] },
+  alberto: { nombre:'Don Alberto Gomez',  av:'👴', bg:'#eef0fa', online:false, humor:'Descansando un poco hoy',        historial:[{de:'ellos',txt:'Buenas tardes dona Carmen. Como le fue con la rodilla? Yo tambien ando con el tema de la presion estos dias',t:'Ayer 3:12 pm'}] },
+  cecilia: { nombre:'Dona Cecilia Rios',  av:'👩‍🦳', bg:'#fce8e8', online:true,  humor:'7 dias de racha! Feliz!',        historial:[{de:'ellos',txt:'Cumpli 7 dias seguidos! Mi hija me llamo a felicitarme 🏅 ¿Usted como va con sus medicinas?',t:'Hace 2 horas'}] }
+};
+var chatActual = null;
+var chatHistorials = {};
+
+function openChat(id){
+  var p = personas[id];
+  if(!p) return;
+  chatActual = id;
+  if(!chatHistorials[id]) chatHistorials[id] = p.historial.slice();
+
+  document.getElementById('cmAv').textContent = p.av;
+  document.getElementById('cmAv').style.background = p.bg;
+  document.getElementById('cmName').textContent = p.nombre;
+  var st = document.getElementById('cmStatus');
+  if(p.online){ st.textContent = 'En linea ahora'; st.style.color='var(--accent2)'; }
+  else { st.textContent = p.humor; st.style.color='var(--muted)'; }
+
+  renderChatMessages();
+  document.getElementById('chatModalOverlay').classList.add('open');
+  document.getElementById('cmInput').focus();
+}
+
+function closeChat(){
+  document.getElementById('chatModalOverlay').classList.remove('open');
+  chatActual = null;
+}
+
+function closeChatIfOutside(e){
+  if(e.target === document.getElementById('chatModalOverlay')) closeChat();
+}
+
+function renderChatMessages(){
+  var msgs = document.getElementById('cmMessages');
+  msgs.innerHTML = '';
+  var hist = chatHistorials[chatActual] || [];
+  hist.forEach(function(m){
+    var div = document.createElement('div');
+    if(m.de === 'me'){
+      div.className = 'cm-bubble-me';
+      div.innerHTML = '<div class="cm-text">'+escapeHtml(m.txt)+'</div><div class="cm-time">'+m.t+'</div>';
+    } else {
+      div.className = 'cm-bubble-them';
+      div.innerHTML = '<div class="cm-text">'+escapeHtml(m.txt)+'</div><div class="cm-time">'+m.t+'</div>';
+    }
+    msgs.appendChild(div);
+  });
+  document.getElementById('cmTyping').style.display = 'none';
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChatMsg(){
+  var input = document.getElementById('cmInput');
+  var txt = input.value.trim();
+  if(!txt || !chatActual) return;
+
+  var now = new Date();
+  var h = now.getHours().toString().padStart(2,'0');
+  var m = now.getMinutes().toString().padStart(2,'0');
+  var t = h+':'+m;
+
+  chatHistorials[chatActual].push({de:'me', txt:txt, t:t});
+  input.value = '';
+  renderChatMessages();
+
+  // Simular respuesta de la persona
+  var p = personas[chatActual];
+  if(p.online){
+    document.getElementById('cmTyping').style.display = 'block';
+    var msgs = document.getElementById('cmMessages');
+    msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(function(){
+      if(chatActual){
+        var respuestas = getRespuestas(chatActual, txt);
+        var resp = respuestas[Math.floor(Math.random()*respuestas.length)];
+        chatHistorials[chatActual].push({de:'ellos', txt:resp, t:t});
+        renderChatMessages();
+      }
+    }, 1400 + Math.random()*800);
+  } else {
+    showToast('Mensaje enviado. '+ p.nombre.split(' ')[1] +' respondera cuando este disponible');
+  }
+}
+
+function getRespuestas(id, msg){
+  var base = {
+    rosa:[
+      'Ay dona Carmen, que bueno saber de usted! 😊',
+      'Claro que si! La espero manana en el parque a las 3pm 🌸',
+      'Eso mismo le digo yo a mi hija. Hay que cuidarse mucho!',
+      'Me alegro mucho! Que Dios la bendiga siempre 🙏',
+      'Oiga, ¿ya tomo sus medicinas del almuerzo? No se le vaya a olvidar 💊'
+    ],
+    luz:[
+      'Hola dona Carmen! Cuanto gusto 😄',
+      'Si, hoy me siento muy bien gracias a Dios!',
+      'Le mando la receta por aqui si quiere, es muy sencilla 🥗',
+      'Que rico! Nos vemos el jueves en el grupo de Diabetes?',
+      'Eso es muy importante. La salud primero!'
+    ],
+    alberto:[
+      'Hola dona Carmen. Por aca bien, descansando un poco.',
+      'Si, estos dias ando un poco cansado pero bien.',
+      'Gracias por preguntar. La cuido mucho a usted tambien 😊',
+      'Eso me dijo el medico tambien. Hay que hacerle caso.',
+      'Que bueno escucharla. Que este bien!'
+    ],
+    cecilia:[
+      'Hola dona Carmen! 7 dias de racha y contando! 🏅',
+      'Si, mi hija estaba muy contenta. Que alegria!',
+      'Usted siempre tan juiciosa con sus medicinas. Me inspira!',
+      'Manana nos vemos en el reto? Yo voy a salir tempranito 🚶‍♀️',
+      'Que Dios la bendiga dona Carmen. Siempre tan linda!'
+    ]
+  };
+  return base[id] || ['Que bueno saber de usted! 😊'];
+}
+
+// ===== INIT =====
+// checkApiKey() se llama después del login, no aquí
+</script>
+
+<script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://cuwuicggkpkzlfiaaxtk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_UtgAEJ65X_C1TGb8eLxpSQ_7ojMiWaJ';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== LOGIN UI =====
+let loginMode = 'login';
+
+function switchLoginTab(mode) {
+  loginMode = mode;
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('registerFields').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('registerFields').style.flexDirection = 'column';
+  document.getElementById('registerFields').style.gap = '12px';
+  document.getElementById('loginBtn').textContent = mode === 'register' ? 'Crear cuenta' : 'Ingresar';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+
+  if (!email || !password) {
+    showLoginError('Por favor complete todos los campos');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Un momento...';
+  errEl.style.display = 'none';
+
+  try {
+    if (loginMode === 'register') {
+      const nombre = document.getElementById('registerNombre').value.trim();
+      const rol = document.getElementById('registerRol').value;
+      if (!nombre) { showLoginError('Por favor ingrese su nombre'); btn.disabled = false; btn.textContent = 'Crear cuenta'; return; }
+
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+
+      // Crear perfil con rol
+      const { error: perfilError } = await sb.from('perfiles').insert({ id: data.user.id, nombre, rol });
+      if (perfilError) throw perfilError;
+
+      showLoginError('✅ Cuenta creada. Revise su correo para confirmar.');
+      errEl.style.color = 'var(--accent2)';
+      errEl.style.display = 'block';
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await entrarApp(data.user);
+    }
+  } catch (err) {
+    const msgs = {
+      'Invalid login credentials': 'Correo o contraseña incorrectos',
+      'Email not confirmed': 'Confirme su correo antes de ingresar',
+      'User already registered': 'Este correo ya está registrado'
+    };
+    showLoginError(msgs[err.message] || err.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = loginMode === 'register' ? 'Crear cuenta' : 'Ingresar';
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.color = 'var(--danger)';
+  el.style.display = 'block';
+}
+
+async function entrarApp(user) {
+  // Obtener perfil y rol
+  const { data: perfil } = await sb.from('perfiles').select('*').eq('id', user.id).single();
+
+  // Ocultar login, mostrar app
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appMain').style.display = 'block';
+
+  // Activar la vista según el rol
+  if (perfil) {
+    const rolVista = { adulto_mayor: 'elder', familiar: 'family', medico: 'doctor' };
+    setMode(rolVista[perfil.rol] || 'elder');
+
+    // Guardar nombre en el saludo
+    if (perfil.rol === 'adulto_mayor') {
+      const saludoEl = document.querySelector('.elder-greeting em');
+      if (saludoEl) saludoEl.textContent = perfil.nombre.split(' ')[0];
+    }
+  }
+
+  checkApiKey();
+}
+
+// Verificar si ya hay sesión activa al cargar
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    entrarApp(session.user);
+  }
+});
+
+// Permitir Enter en los campos de login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleAuth();
+});
+</script>
+</body>
+</html>
